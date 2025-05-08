@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from app.controllers.window_controller import Controller
 from app.controllers.bot_controller import *
+from app.bot.generate_auth_code import generate_auth_code
 
 class Main_Window(QMainWindow):
     def __init__(self, controller=Controller):
@@ -14,7 +15,7 @@ class Main_Window(QMainWindow):
         Инициализация окна регистрации/входа.
         
         Args:
-            controller: Контроллер для работы с данными пользователей
+            controller: Контроллер для работы с БД
         """
         # Вызов конструктора родительского класса QMainWindow
         super().__init__()
@@ -335,6 +336,17 @@ class Main_Window(QMainWindow):
         subscribe_button.clicked.connect(self.show_subscription_dialog)
         layout.addWidget(subscribe_button)
         
+        # Кнопка подключения Telegram-бота
+        connect_telegram_button = QPushButton("ПОДКЛЮЧИТЬ TELEGRAM-БОТА ДЛЯ АВТОРИЗАЦИИ")
+        connect_telegram_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 15px; font-weight: bold; " 
+            "border-radius: 5px; font-size: 14px; margin-top: 20px;"
+        )
+        connect_telegram_button.setMinimumHeight(60)
+        connect_telegram_button.clicked.connect(self.show_telegram_connect_dialog)
+        layout.addWidget(connect_telegram_button)
+
+        
         # Добавляем автоматическое растяжение пространства
         layout.addStretch()
         
@@ -434,11 +446,56 @@ class Main_Window(QMainWindow):
             self.personal_cabinet_widget = self.create_personal_cabinet()
             self.stacked_widget.addWidget(self.personal_cabinet_widget)
         
-        # Обновляем имя пользователя
-        # В реальном приложении здесь бы обновлялась информация из БД
-        
         # Показываем личный кабинет
         self.stacked_widget.setCurrentWidget(self.personal_cabinet_widget)
+    
+    def show_telegram_connect_dialog(self):
+        """Показывает диалог с кодом для подключения Telegram-бота"""
+        # Создаем диалоговое окно
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Подключение Telegram-бота")
+        dialog.setFixedSize(400, 250)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        # Создаем вертикальный макет для диалога
+        layout = QVBoxLayout(dialog)
+        
+        # Добавляем инструкцию
+        instruction_label = QLabel("Для подключения Telegram-бота используйте этот код:")
+        instruction_label.setStyleSheet("font-size: 14px; margin-bottom: 15px;")
+        instruction_label.setWordWrap(True)
+        layout.addWidget(instruction_label)
+        
+        # TODO
+        # Генерируем и отображаем код
+        # code = self.controller.create_code()  # Вызываем функцию контроллера для создания кода
+        code = generate_auth_code()
+        code_label = QLabel(str(code))
+        code_label.setStyleSheet(
+            "font-size: 24px; font-weight: bold; padding: 20px; "
+            "background-color: white; border: 1px solid #ddd; border-radius: 5px; "
+            "margin: 10px 0;"
+        )
+        code_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(code_label)
+        
+        # Добавляем инструкцию по использованию кода
+        note_label = QLabel("Откройте бота @magazines_n7_bot в Telegram и введите этот код.")
+        note_label.setStyleSheet("font-size: 14px; margin-top: 10px;")
+        note_label.setWordWrap(True)
+        layout.addWidget(note_label)
+        
+        # Добавляем кнопку "Закрыть"
+        close_button = QPushButton("ЗАКРЫТЬ")
+        close_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 12px; "
+            "font-weight: bold; border-radius: 5px; margin-top: 20px;"
+        )
+        close_button.clicked.connect(dialog.accept)  # При нажатии кнопки закрываем диалог
+        layout.addWidget(close_button)
+        
+        # Показываем диалог
+        dialog.exec()
 
     def logout(self):
         """Выход из личного кабинета"""

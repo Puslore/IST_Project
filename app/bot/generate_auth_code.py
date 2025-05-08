@@ -1,6 +1,6 @@
 from random import sample
 
-def generate_auth_code():
+def generate_auth_code() -> int:
     digits = sample(range(10), 4)
 
     if digits[0] == 0:
