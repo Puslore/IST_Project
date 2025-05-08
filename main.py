@@ -1,6 +1,3 @@
-from app.database import session
-
-
 def create_db(skip_test_filling: bool = True) -> bool:
     '''
     Создание и инициализация базы данных.
