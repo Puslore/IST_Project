@@ -1,1 +1,14 @@
+certifi==2025.4.26
+charset-normalizer==3.4.2
+greenlet==3.2.1
+idna==3.10
+PyQt6==6.9.0
+PyQt6-Qt6==6.9.0
+PyQt6_sip==13.10.0
+pyTelegramBotAPI==4.27.0
+python-dotenv==1.1.0
+requests==2.32.3
 SQLAlchemy==2.0.40
+telebot==0.0.5
+typing_extensions==4.13.2
+urllib3==2.4.0

@@ -1,3 +1,11 @@
+import sys
+import asyncio
+import qtinter
+from PyQt6.QtWidgets import QApplication
+from app.gui.base_window import Main_Window
+from app.bot.bot import start_bot
+
+
 def create_db(skip_test_filling: bool = True) -> bool:
     '''
     Создание и инициализация базы данных.
@@ -20,19 +28,25 @@ def create_db(skip_test_filling: bool = True) -> bool:
         return True
 
 
-def create_gui():
-    ...
-
-
-def start_app():
-    create_gui()
+def start_app(DATABASE_PATH):
+    '''
+    Функция, запускающая работу приложения
+    '''
+    app = QApplication(sys.argv)
+    window = Main_Window()
+    window.show()
+    
+    # Запуск PyQt и бота вместе
+    with qtinter.using_asyncio_from_qt():
+        asyncio.create_task(start_bot())
+        app.exec()
 
 
 def main():
-    create_db(False)
-    start_app()
+    DATABASE_PATH = ''
+    # create_db(False)
+    start_app(DATABASE_PATH)
 
 
 if __name__ == "__main__":
-    PATH = ''
-    main(PATH)
+    main()
