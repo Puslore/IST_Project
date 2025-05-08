@@ -37,6 +37,7 @@ class User(Base):
     ad_consent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     registration_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     newspaper_subscriptions: Mapped[List[int]] = mapped_column(ARRAY(Integer), default=list)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     def __repr__(self) -> str:
         '''
