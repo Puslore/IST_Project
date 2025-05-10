@@ -35,3 +35,13 @@ class Publisher(Base):
             str: Строка с ID и названием издательства
         '''
         return f"<Publisher(id={self.id}, name='{self.name}')>"
+
+    def get_active_publications(self):
+        '''
+        Возвращает список активных публикаций издательства
+        
+        Returns:
+            List[Publication]: Список активных публикаций
+        '''
+        return [pub for pub in self.publications if pub.on_sale]
+
