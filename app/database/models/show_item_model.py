@@ -38,10 +38,7 @@ class ShowItem(Base):
     is_special_edition: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     publication_type: Mapped[str] = mapped_column(Text, nullable=False)
-    publication_series_id: Mapped[int] = mapped_column(
-        ForeignKey("publications.id"), 
-        nullable=False
-    )
+    publication_series_id: Mapped[int] = mapped_column(ForeignKey("publications.id"), nullable=False)
     publication_series: Mapped["Publication"] = relationship("Publication", back_populates="show_items")
     on_sale: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
