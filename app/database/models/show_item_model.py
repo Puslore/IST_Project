@@ -50,7 +50,8 @@ class ShowItem(Base):
     pg: Mapped[Optional[int]] = mapped_column(Integer)
 
     cost: Mapped[float] = mapped_column(Float, nullable=True)
-    discount: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_discount: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    discount: Mapped[Optional[int]] = mapped_column(Integer)
 
     def __repr__(self) -> str:
         '''
@@ -60,3 +61,29 @@ class ShowItem(Base):
             str: Строка с ID, названием издания и номером выпуска
         '''
         return f"<ShowItem(id={self.id}, name='{self.name}', issue={self.issue_number})>"
+    
+    def get_price(self) -> float:
+        '''
+        Рассчитывает итоговую цену выпуска с учетом скидки
+        
+        Returns:
+            float: Итоговая цена после применения скидки (если есть)
+        '''
+        if not self.cost:
+            return 0.0
+            
+        if self.discount:
+            return self.cost * self.discount
+
+        return self.cost
+
+    def days_since_publication(self) -> int:
+        '''
+        Возвращает количество дней с момента выпуска
+        
+        Returns:
+            int: Количество дней, прошедших с даты выпуска
+        '''
+        current_date = datetime.now()
+        delta = current_date - self.issue_date
+        return delta.days
