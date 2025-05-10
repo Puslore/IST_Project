@@ -2,7 +2,7 @@ import sys
 import asyncio
 import qtinter
 from PyQt6.QtWidgets import QApplication
-from app.gui.base_window import Main_Window
+from app.gui.user_window import Main_Window
 from app.bot.bot import start_bot
 
 

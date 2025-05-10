@@ -1,6 +1,6 @@
 from app.bot.generate_auth_code import generate_auth_code
-# from app.database.repositories.user_repository import UserRepository
-# from app.database.session import get_session
+from app.database.repositories import (UserRepository,)
+from app.database.session import get_session
 
 
 class BotController:

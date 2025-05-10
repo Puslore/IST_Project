@@ -1,1 +1,5 @@
-# Файл, описывающий класс репозитория пользователя и функции для взаимодействия
+from app.database.repositories.base_repository import BaseRepository
+
+
+class UserRepository(BaseRepository):
+    pass

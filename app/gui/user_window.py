@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
                              QComboBox)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
-from app.controllers.window_controller import Controller
+from app.controllers.user_window_controller import Controller
 from app.controllers.bot_controller import *
 from app.bot.generate_auth_code import generate_auth_code
 
