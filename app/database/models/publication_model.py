@@ -53,3 +53,27 @@ class Publication(Base):
             str: Строка с ID и названием издания
         '''
         return f"<Publication(id={self.id}, name='{self.name}')>"
+    
+    def is_subscriber(self, user) -> bool:
+        '''
+        Проверяет, является ли пользователь подписчиком издания
+        
+        Args:
+            user (User): Пользователь для проверки
+            
+        Returns:
+            bool: True, если пользователь подписан, иначе False
+        '''
+        return user in self.subscribers
+
+    def get_latest_issue(self):
+        '''
+        Возвращает последний выпуск издания
+        
+        Returns:
+            ShowItem: Последний выпуск или None, если выпусков нет
+        '''
+        if not self.show_items:
+            return None
+        return max(self.show_items, key=lambda issue: issue.issue_date)
+
