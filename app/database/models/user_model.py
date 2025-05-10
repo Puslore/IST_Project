@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import Boolean, DateTime, Text
+from sqlalchemy import Boolean, DateTime, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.models import Base
 from . import Publication
@@ -18,6 +18,7 @@ class User(Base):
         phone_number (str): Контактный номер телефона в формате +XXXXXXXXXXX
         email (Optional[str]): Адрес электронной почты (опционально)
         address (str): Физический адрес пользователя
+        tg_chat_id (int): telegram chat id
         ad_consent (bool): Флаг согласия на получение рекламных материалов
         registration_date (datetime): Дата и время регистрации пользователя
         is_active (bool): Флаг, показывающий статус активности пользователя
@@ -34,6 +35,7 @@ class User(Base):
     phone_number: Mapped[str] = mapped_column(Text, nullable=False)
     email: Mapped[Optional[str]] = mapped_column(Text)
     address: Mapped[str] = mapped_column(Text, nullable=False)
+    tg_chat_id: Mapped[Optional[int]] = mapped_column(Integer)
 
     ad_consent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     registration_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
@@ -75,3 +77,14 @@ class User(Base):
             return any(pub.name == publication_name for pub in self.subscribed_publications)
             
         return False
+    
+    def get_full_name(self) -> str:
+        '''
+        Возвращает полное имя пользователя
+        
+        Returns:
+            str: Полное имя пользователя в формате "Фамилия Имя Отчество"
+        '''
+        if self.middle_name:
+            return f"{self.last_name} {self.first_name} {self.middle_name}"
+        return f"{self.last_name} {self.first_name}"
