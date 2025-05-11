@@ -13,6 +13,21 @@ class BaseRepository:
         self.model_class = model_class
         self.session = session
     
+    def commit(self) -> bool:
+        '''
+        Коммитит изменения в базу данных
+        
+        Returns:
+            bool: True, если операция успешна, иначе False
+        '''
+        try:
+            self.session.commit()
+            return True
+        except Exception as e:
+            self.session.rollback()
+            print(f"Ошибка при коммите: {e}")
+            return False
+    
     def get_all(self):
         '''
         Получение всех записей из таблицы
