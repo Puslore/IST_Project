@@ -18,7 +18,6 @@ class Publication(Base):
         sales_start (datetime): Дата начала продаж
         name (str): Название издания
         description (str): Описание издания
-        pg (Optional[int]): Возрастное ограничение (опционально)
         
         show_items (List[ShowItem]): Связанные выпуски данного издания
         subscribers (List[User]): Пользователи, подписанные на издание
@@ -35,7 +34,7 @@ class Publication(Base):
 
     name: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    pg: Mapped[Optional[int]] = mapped_column(Integer)
+    # pg: Mapped[Optional[int]] = mapped_column(Integer)
     
     show_items: Mapped[List["ShowItem"]] = relationship("ShowItem", back_populates="publication_series")
 
