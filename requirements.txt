@@ -8,6 +8,8 @@ frozenlist==1.6.0
 greenlet==3.2.1
 idna==3.10
 multidict==6.4.3
+numpy==2.2.5
+pandas==2.2.3
 passlib==1.7.4
 propcache==0.3.1
 psycopg2-binary==2.9.10
@@ -15,11 +17,15 @@ PyQt6==6.9.0
 PyQt6-Qt6==6.9.0
 PyQt6_sip==13.10.0
 pyTelegramBotAPI==4.27.0
+python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
+pytz==2025.2
 qtinter==0.11.0
 requests==2.32.3
+six==1.17.0
 SQLAlchemy==2.0.40
 telebot==0.0.5
 typing_extensions==4.13.2
+tzdata==2025.2
 urllib3==2.4.0
 yarl==1.20.0
