@@ -10,6 +10,7 @@ idna==3.10
 multidict==6.4.3
 passlib==1.7.4
 propcache==0.3.1
+psycopg2-binary==2.9.10
 PyQt6==6.9.0
 PyQt6-Qt6==6.9.0
 PyQt6_sip==13.10.0
