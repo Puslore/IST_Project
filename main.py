@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QApplication
 from app.gui.user_window import Main_Window
 from app.bot.bot import start_bot
 from app.database.init_db import init_db
+from utilities import fill_db
 
 
 def create_db(skip_test_filling: bool = True) -> bool:
@@ -20,6 +21,7 @@ def create_db(skip_test_filling: bool = True) -> bool:
     exist = False
     if not exist:
         if not skip_test_filling:
+            fill_db()
             init_db()
             return True
     

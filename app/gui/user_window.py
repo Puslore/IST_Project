@@ -296,6 +296,7 @@ class Main_Window(QMainWindow):
     
     def create_personal_cabinet(self, user):
         """Создает виджет с личным кабинетом пользователя"""
+        # self.current_user
         cabinet_widget = QWidget()
         layout = QVBoxLayout(cabinet_widget)
 
@@ -514,26 +515,22 @@ class Main_Window(QMainWindow):
         
         # Список доступных изданий        
         publications_table = QTableWidget()
-        publications_table.setColumnCount(3)
-        publications_table.setHorizontalHeaderLabels(["Название", "Тип", "Стоимость"])
+        publications_table.setColumnCount(2)
+        publications_table.setHorizontalHeaderLabels(["Название", "Тип"])
         publications_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         publications_table.setStyleSheet("background-color: white; border: 1px solid #ddd;")
+        publications_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         
-        # Добавляем примеры изданий
-        sample_publications = [
-            ("Вечерний курьер", "Газета", "450 ₽/мес"),
-            ("Научный вестник", "Журнал", "720 ₽/мес"),
-            ("Спортивный обзор", "Газета", "380 ₽/мес"),
-            ("Мир технологий", "Журнал", "850 ₽/мес"),
-            ("Городские новости", "Газета", "400 ₽/мес")
-        ]
+        # Получаем список публикаций
+        publications = self.window_controller.get_all_publications()
+        self.publications_data = publications  # Сохраняем данные о публикациях
         
-        publications_table.setRowCount(len(sample_publications))
+        publications_table.setRowCount(len(publications))
         
-        for row, (name, pub_type, price) in enumerate(sample_publications):
-            publications_table.setItem(row, 0, QTableWidgetItem(name))
-            publications_table.setItem(row, 1, QTableWidgetItem(pub_type))
-            publications_table.setItem(row, 2, QTableWidgetItem(price))
+        for row, publication in enumerate(publications):
+            publications_table.setItem(row, 0, QTableWidgetItem(publication.name))
+            publications_table.setItem(row, 1, QTableWidgetItem(publication.publication_type))
+            # publications_table.setItem(row, 2, QTableWidgetItem(str(publication.cost)))
         
         layout.addWidget(publications_table)
         
@@ -545,6 +542,8 @@ class Main_Window(QMainWindow):
             "background-color: #1e1e1e; color: white; padding: 12px; "
             "font-weight: bold; border-radius: 5px;"
         )
+        # Подключаем обработчик к кнопке подписки
+        subscribe_button.clicked.connect(lambda: self.handle_subscription(dialog, publications_table))
         
         cancel_button = QPushButton("ОТМЕНА")
         cancel_button.setStyleSheet(
@@ -559,9 +558,45 @@ class Main_Window(QMainWindow):
         layout.addLayout(buttons_layout)
         
         dialog.exec()
+    
+    def handle_subscription(self, dialog, publications_table):
+        '''Обрабатывает подписку пользователя на выбранное издание'''
+        # Получаем выбранные строки
+        selected_items = publications_table.selectedItems()
+        
+        if not selected_items:
+            QMessageBox.warning(self, "Предупреждение", "Выберите издание для подписки")
+            return
+        
+        # Получаем индекс выбранной строки
+        selected_row = publications_table.row(selected_items[0])
+        
+        # Получаем выбранную публикацию
+        selected_publication = self.publications_data[selected_row]
+        
+        # Проверяем, не подписан ли пользователь уже на это издание
+        if self.current_user.has_subscription(publication_id=selected_publication.id):
+            QMessageBox.warning(self, "Предупреждение", "Вы уже подписаны на это издание")
+            return
+        
+        # Пытаемся оформить подписку
+        success = self.window_controller.subscribe_user_to_publication(
+            self.current_user.id, selected_publication.id
+        )
+        
+        if success:
+            QMessageBox.information(self, "Успех", f"Вы успешно подписались на издание '{selected_publication.name}'")
+            dialog.accept()
+            # Обновляем личный кабинет
+            self.current_user = self.window_controller.get_user_by_id(self.current_user.id)
+            self.refresh_personal_cabinet()
+        else:
+            QMessageBox.warning(self, "Ошибка", "Не удалось оформить подписку. Пожалуйста, попробуйте позже.")
+
 
     def show_personal_cabinet(self, user):
         """Переключает на личный кабинет пользователя"""
+        self.current_user = user
         # Если личный кабинет еще не создан
         if not hasattr(self, 'personal_cabinet_widget'):
             self.personal_cabinet_widget = self.create_personal_cabinet(user)
@@ -621,6 +656,8 @@ class Main_Window(QMainWindow):
     def logout(self):
         """Выход из личного кабинета"""
         # Возвращаемся на форму регистрации
+        self.current_user = None
+        self.login_phone.clear() 
         self.show_register_form()
         print("Пользователь вышел из системы")
 
