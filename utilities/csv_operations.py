@@ -12,17 +12,10 @@ def import_from_csv(paths: list) -> dict:
     return data
 
 
-def read_csv(path: str) -> list:
-    '''Read CSV file'''
+def read_csv(path):
     data = []
-    try:
-        with open(path, 'r', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            next(reader)
-            for string in reader:
-                data.append(tuple(string))
-
-        return data
-
-    except Exception as err:
-        raise Exception(f'Error with reading csv file - {err}')
+    with open(path, 'r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            data.append(row)
+    return data
