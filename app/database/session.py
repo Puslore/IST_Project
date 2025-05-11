@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+import psycopg2
 from app.database.get_connection_string import get_connection_string
 import logging
 
