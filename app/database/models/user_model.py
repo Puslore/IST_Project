@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import Boolean, DateTime, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from .base_model import Base
+from .user_subscription_model import user_subscriptions
+from . import Base
 
 
 class User(Base):
@@ -42,7 +43,7 @@ class User(Base):
 
     subscribed_publications: Mapped[List["Publication"]] = relationship(
         "Publication",
-        secondary="user_subscriptions",
+        secondary=user_subscriptions,
         back_populates="subscribers"
     )
 

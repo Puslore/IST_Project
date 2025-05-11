@@ -2,15 +2,15 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QLineEdit, QCheckBox,
                              QPushButton, QFormLayout, QStackedWidget, QDialog,
                              QTableWidget, QTableWidgetItem, QHeaderView,
-                             QComboBox)
+                             QComboBox, QGroupBox, QMessageBox)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from app.controllers.user_window_controller import Controller
-from app.controllers.bot_controller import *
+from app.controllers.bot_controller import BotController
 from app.bot.generate_auth_code import generate_auth_code
 
 class Main_Window(QMainWindow):
-    def __init__(self, controller=Controller):
+    def __init__(self, window_controller=Controller(), bot_controller = BotController()):
         """
         Инициализация окна регистрации/входа.
         
@@ -20,8 +20,9 @@ class Main_Window(QMainWindow):
         # Вызов конструктора родительского класса QMainWindow
         super().__init__()
         
-        # Сохранение ссылки на контроллер
-        self.controller = controller
+        # Ссылки на контроллеры
+        self.window_controller = window_controller
+        self.bot_controller = bot_controller
         
         # Настройка основного окна
         self.setWindowTitle("Терминал газетного киоска")
@@ -217,7 +218,7 @@ class Main_Window(QMainWindow):
     
     def register_user(self):
         """Метод для обработки регистрации пользователя"""
-        if not self.controller:
+        if not self.window_controller:
             print("Контроллер не инициализирован")
             return
         
@@ -233,14 +234,17 @@ class Main_Window(QMainWindow):
         }
         
         # Вызов метода контроллера для создания пользователя
-        result = self.controller.create_user(user_data)
+        result = self.window_controller.create_user(user_data)
         
         # Обработка результата (можно добавить диалоговое окно с сообщением)
-        if result:
+        if result[0] == True and result is not None:
             print("Пользователь успешно зарегистрирован")
             self.clear_form()
+            self.show_personal_cabinet(result[1])
+        
         else:
             print("Ошибка при регистрации пользователя")
+            
     
     def clear_form(self):
         """Очистка полей формы после успешной регистрации"""
@@ -249,9 +253,11 @@ class Main_Window(QMainWindow):
     
     def login_via_sms(self):
         """Вход по SMS (для демо просто выводим сообщение)"""
-        print(f"Вход по SMS для номера: {self.login_phone.text()}")
+        phone = self.login_phone.text()
+        print(f"Вход по SMS для номера: {phone}")
         # Здесь будет интеграция с реальной системой SMS в будущем
-        self.login_successful()
+        user = self.window_controller.get_user_by_phone(phone)
+        self.show_personal_cabinet(user)
     
     def login_via_telegram(self):
         """Вход с помощью кода из Telegram"""
@@ -288,19 +294,19 @@ class Main_Window(QMainWindow):
         """Обработка успешного входа"""
         self.show_personal_cabinet()
     
-    def create_personal_cabinet(self):
+    def create_personal_cabinet(self, user):
         """Создает виджет с личным кабинетом пользователя"""
         cabinet_widget = QWidget()
         layout = QVBoxLayout(cabinet_widget)
-        
+
         # Верхняя панель с именем пользователя и кнопкой выхода
         top_panel = QHBoxLayout()
         
         # Имя пользователя
-        user_label = QLabel("Здравствуйте, Иван Иванов")  # Будет заменено на реальное имя
+        user_label = QLabel(f"Здравствуйте, {user.get_full_name()}!")
         user_label.setStyleSheet("font-size: 18px; font-weight: bold;")
         top_panel.addWidget(user_label, 1)
-        
+
         # Кнопка выхода
         logout_button = QPushButton("ВЫХОД")
         logout_button.setStyleSheet(
@@ -309,48 +315,163 @@ class Main_Window(QMainWindow):
         )
         logout_button.clicked.connect(self.logout)
         top_panel.addWidget(logout_button)
-        
         layout.addLayout(top_panel)
         layout.addSpacing(20)
-        
+
         # Секция подписок
         subscriptions_label = QLabel("МОИ ПОДПИСКИ")
         subscriptions_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         layout.addWidget(subscriptions_label)
+
+        # Список подписок
+        if hasattr(user, 'subscribed_publications') and user.subscribed_publications:
+            # Создаем таблицу с подписками
+            subscriptions_table = QTableWidget()
+            subscriptions_table.setColumnCount(3)
+            subscriptions_table.setHorizontalHeaderLabels(["Название", "Тип", "Статус"])
+            subscriptions_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            subscriptions_table.setStyleSheet("background-color: white; border: 1px solid #ddd;")
+            
+            # Заполняем таблицу данными о подписках
+            subscriptions_table.setRowCount(len(user.subscribed_publications))
+            for row, pub in enumerate(user.subscribed_publications):
+                subscriptions_table.setItem(row, 0, QTableWidgetItem(pub.name))
+                subscriptions_table.setItem(row, 1, QTableWidgetItem(pub.publication_type))
+                subscriptions_table.setItem(row, 2, QTableWidgetItem("Активна" if pub.on_sale else "Не активна"))
+            
+            self.subscriptions_list = subscriptions_table
+        else:
+            self.subscriptions_list = QLabel("У вас пока нет активных подписок")
+            self.subscriptions_list.setStyleSheet(
+                "background-color: white; padding: 20px; border: 1px solid #ddd; "
+                "min-height: 200px; border-radius: 5px;"
+            )
         
-        # Список подписок (пустой)
-        self.subscriptions_list = QLabel("У вас пока нет активных подписок")
-        self.subscriptions_list.setStyleSheet(
-            "background-color: white; padding: 20px; border: 1px solid #ddd; "
-            "min-height: 200px; border-radius: 5px;"
-        )
         layout.addWidget(self.subscriptions_list)
+
+        # Добавляем дополнительные секции
         
-        # Кнопка оформления подписки
+        # Секция профиля
+        profile_section = QGroupBox("ПРОФИЛЬ")
+        profile_section.setStyleSheet("margin-top: 20px;")
+        profile_layout = QVBoxLayout(profile_section)
+        
+        # Добавляем информацию о профиле
+        profile_info = QLabel(
+            f"<b>Телефон:</b> {user.phone_number}<br>"
+            f"<b>Email:</b> {user.email or 'Не указан'}<br>"
+            f"<b>Адрес:</b> {user.address}"
+        )
+        profile_info.setStyleSheet("background-color: white; padding: 15px; border-radius: 5px;")
+        profile_layout.addWidget(profile_info)
+        
+        # Кнопка редактирования профиля
+        edit_profile_button = QPushButton("РЕДАКТИРОВАТЬ ПРОФИЛЬ")
+        edit_profile_button.setStyleSheet(
+            "background-color: white; color: black; padding: 10px; "
+            "border: 1px solid black; border-radius: 5px; margin-top: 10px;"
+        )
+        edit_profile_button.clicked.connect(self.edit_profile)
+        profile_layout.addWidget(edit_profile_button)
+        
+        layout.addWidget(profile_section)
+
+        # Кнопки основных действий
         subscribe_button = QPushButton("ОФОРМИТЬ ПОДПИСКУ")
         subscribe_button.setStyleSheet(
-            "background-color: #1e1e1e; color: white; padding: 15px; font-weight: bold; " 
+            "background-color: #1e1e1e; color: white; padding: 15px; font-weight: bold; "
             "border-radius: 5px; font-size: 14px; margin-top: 20px;"
         )
         subscribe_button.setMinimumHeight(60)
         subscribe_button.clicked.connect(self.show_subscription_dialog)
         layout.addWidget(subscribe_button)
-        
+
         # Кнопка подключения Telegram-бота
         connect_telegram_button = QPushButton("ПОДКЛЮЧИТЬ TELEGRAM-БОТА ДЛЯ АВТОРИЗАЦИИ")
         connect_telegram_button.setStyleSheet(
-            "background-color: #1e1e1e; color: white; padding: 15px; font-weight: bold; " 
+            "background-color: #1e1e1e; color: white; padding: 15px; font-weight: bold; "
             "border-radius: 5px; font-size: 14px; margin-top: 20px;"
         )
         connect_telegram_button.setMinimumHeight(60)
         connect_telegram_button.clicked.connect(self.show_telegram_connect_dialog)
         layout.addWidget(connect_telegram_button)
 
-        
         # Добавляем автоматическое растяжение пространства
         layout.addStretch()
         
         return cabinet_widget
+
+    def edit_profile(self):
+        """Открывает окно редактирования профиля"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Редактирование профиля")
+        dialog.setFixedSize(400, 400)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        form_layout = QFormLayout()
+        
+        # Стили для полей
+        input_style = "padding: 12px; border: 1px solid black; border-radius: 5px; background-color: #f8f3e6;"
+        
+        # Создаем поля для редактирования
+        phone_field = QLineEdit()
+        phone_field.setStyleSheet(input_style)
+        phone_field.setText(self.current_user.phone_number)
+        
+        email_field = QLineEdit()
+        email_field.setStyleSheet(input_style)
+        email_field.setText(self.current_user.email or "")
+        
+        address_field = QLineEdit()
+        address_field.setStyleSheet(input_style)
+        address_field.setText(self.current_user.address)
+        
+        # Добавляем поля в форму
+        form_layout.addRow("Телефон:", phone_field)
+        form_layout.addRow("Email:", email_field)
+        form_layout.addRow("Адрес:", address_field)
+        
+        layout.addLayout(form_layout)
+        
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        save_button = QPushButton("СОХРАНИТЬ")
+        save_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 12px; "
+            "font-weight: bold; border-radius: 5px;"
+        )
+        save_button.clicked.connect(lambda: self.save_profile(
+            dialog, phone_field.text(), email_field.text(), address_field.text()
+        ))
+        
+        cancel_button = QPushButton("ОТМЕНА")
+        cancel_button.setStyleSheet(
+            "background-color: white; color: black; padding: 12px; "
+            "border: 1px solid black; border-radius: 5px;"
+        )
+        cancel_button.clicked.connect(dialog.reject)
+        
+        buttons_layout.addWidget(save_button)
+        buttons_layout.addWidget(cancel_button)
+        layout.addLayout(buttons_layout)
+        
+        dialog.exec()
+
+    def save_profile(self, dialog, phone, email, address):
+        """Сохраняет изменения в профиле пользователя"""
+        # Обновляем данные пользователя через контроллер
+        success = self.window_controller.update_user_profile(
+            self.current_user.id, phone, email, address
+        )
+        
+        if success:
+            dialog.accept()
+            # Обновляем пользователя и перерисовываем личный кабинет
+            self.current_user = self.window_controller.get_user_by_id(self.current_user.id)
+            self.refresh_personal_cabinet()
+        else:
+            QMessageBox.warning(self, "Ошибка", "Не удалось обновить профиль")
 
     def show_subscription_dialog(self):
         """Показывает диалог для оформления подписки"""
@@ -439,11 +560,11 @@ class Main_Window(QMainWindow):
         
         dialog.exec()
 
-    def show_personal_cabinet(self, user_name="Иван Иванов"):
+    def show_personal_cabinet(self, user):
         """Переключает на личный кабинет пользователя"""
         # Если личный кабинет еще не создан
         if not hasattr(self, 'personal_cabinet_widget'):
-            self.personal_cabinet_widget = self.create_personal_cabinet()
+            self.personal_cabinet_widget = self.create_personal_cabinet(user)
             self.stacked_widget.addWidget(self.personal_cabinet_widget)
         
         # Показываем личный кабинет
@@ -503,10 +624,27 @@ class Main_Window(QMainWindow):
         self.show_register_form()
         print("Пользователь вышел из системы")
 
-    def login_successful(self):
+    def login_successful(self, user_id):
         """Обработка успешного входа"""
         print("Вход выполнен успешно!")
-        # Получаем имя пользователя из контроллера или используем временное
-        user_name = "Иван Иванов"  # В реальном приложении должно быть получено из контроллера
+        
+        # Получаем пользователя из контроллера
+        self.current_user = self.window_controller.get_user_by_id(user_id)
+        
+        if not self.current_user:
+            print("Ошибка: пользователь не найден")
+            return
+        
         # Переходим в личный кабинет
-        self.show_personal_cabinet(user_name)
+        self.show_personal_cabinet(self.current_user)
+
+    def refresh_personal_cabinet(self):
+        """Обновляет отображение личного кабинета"""
+        if hasattr(self, 'personal_cabinet_widget'):
+            # Удаляем текущий виджет из стека
+            self.stacked_widget.removeWidget(self.personal_cabinet_widget)
+        
+        # Создаем новый виджет личного кабинета
+        self.personal_cabinet_widget = self.create_personal_cabinet(self.current_user)
+        self.stacked_widget.addWidget(self.personal_cabinet_widget)
+        self.stacked_widget.setCurrentWidget(self.personal_cabinet_widget)

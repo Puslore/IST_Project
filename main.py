@@ -4,6 +4,7 @@ import qtinter
 from PyQt6.QtWidgets import QApplication
 from app.gui.user_window import Main_Window
 from app.bot.bot import start_bot
+from app.database.init_db import init_db
 
 
 def create_db(skip_test_filling: bool = True) -> bool:
@@ -19,16 +20,18 @@ def create_db(skip_test_filling: bool = True) -> bool:
     exist = False
     if not exist:
         if not skip_test_filling:
+            init_db()
             return True
-        
+    
         else:
+            init_db()
             return True
     
     else:
         return True
 
 
-def start_app(DATABASE_PATH):
+def start_app():
     '''
     Функция, запускающая работу приложения
     '''
@@ -43,9 +46,8 @@ def start_app(DATABASE_PATH):
 
 
 def main():
-    DATABASE_PATH = ''
-    # create_db(False)
-    start_app(DATABASE_PATH)
+    # create_db()
+    start_app()
 
 
 if __name__ == "__main__":
