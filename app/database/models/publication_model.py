@@ -76,4 +76,3 @@ class Publication(Base):
         if not self.show_items:
             return None
         return max(self.show_items, key=lambda issue: issue.issue_date)
-

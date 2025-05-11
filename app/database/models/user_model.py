@@ -18,7 +18,7 @@ class User(Base):
         phone_number (str): Контактный номер телефона в формате +XXXXXXXXXXX
         email (Optional[str]): Адрес электронной почты (опционально)
         address (str): Физический адрес пользователя
-        tg_chat_id (int): telegram chat id
+        tg_chat_id (int): Telegram chat id
         ad_consent (bool): Флаг согласия на получение рекламных материалов
         registration_date (datetime): Дата и время регистрации пользователя
         is_active (bool): Флаг, показывающий статус активности пользователя
