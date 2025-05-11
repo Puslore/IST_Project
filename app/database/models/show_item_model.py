@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy import Boolean, DateTime, Text, Integer, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from . import Base, Publication
+from . import Base
 
 
 class ShowItem(Base):

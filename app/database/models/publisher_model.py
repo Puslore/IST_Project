@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from sqlalchemy import Boolean, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from . import Base, Publication
+from . import Base
 
 
 class Publisher(Base):

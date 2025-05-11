@@ -1,8 +1,7 @@
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import Text, Integer, ForeignKey, DateTime
+from sqlalchemy import Text, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from . import Base, Courier
+from . import Base
 
 class Complaint(Base):
     '''

@@ -2,8 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import Boolean, DateTime, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.database.models import Base
-from . import Publication
+from .base_model import Base
 
 
 class User(Base):
@@ -40,7 +39,7 @@ class User(Base):
     ad_consent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     registration_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    
+
     subscribed_publications: Mapped[List["Publication"]] = relationship(
         "Publication",
         secondary="user_subscriptions",

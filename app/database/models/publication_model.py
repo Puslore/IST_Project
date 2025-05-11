@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import List, Optional
-from sqlalchemy import Boolean, DateTime, Text, Integer, ForeignKey
+from typing import List
+from sqlalchemy import Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from . import Base, User, Publisher, ShowItem
+from . import Base
 
 
 class Publication(Base):

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy import Boolean, DateTime, Text, Integer, Float
 from sqlalchemy.orm import Mapped, mapped_column
-from app.database.models import Base
+from . import Base
 from passlib.context import CryptContext
 
 # Контекст для хеширования паролей

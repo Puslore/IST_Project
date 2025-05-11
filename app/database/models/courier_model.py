@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import Boolean, DateTime, Text, Integer, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from . import Base, Complaint
+from . import Base
 
 class Courier(Base):
     '''
