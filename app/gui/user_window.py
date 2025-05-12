@@ -146,6 +146,8 @@ class Main_Window(QMainWindow):
     
     def create_login_form(self):
         """Создает виджет с формой входа"""
+        if hasattr(self, 'current_user'):
+            self.current_user = None
         login_widget = QWidget()
         layout = QVBoxLayout(login_widget)
         
@@ -251,14 +253,22 @@ class Main_Window(QMainWindow):
         for field in self.register_fields.values():
             field.clear()
     
+# TODO
     def login_via_sms(self):
         """Вход по SMS (для демо просто выводим сообщение)"""
         phone = self.login_phone.text()
+        print(f'{phone=}')
         print(f"Вход по SMS для номера: {phone}")
-        # Здесь будет интеграция с реальной системой SMS в будущем
+        # Здесь НЕ будет интеграции с реальной системой SMS в будущем
         user = self.window_controller.get_user_by_phone(phone)
-        self.show_personal_cabinet(user)
+        
+        if user is not None:
+            self.show_personal_cabinet(user)
+        
+        else:
+            self.show_login_form()
     
+# TODO
     def login_via_telegram(self):
         """Вход с помощью кода из Telegram"""
         print(f"Запрошен вход через Telegram для номера: {self.login_phone.text()}")
@@ -402,6 +412,7 @@ class Main_Window(QMainWindow):
         
         return cabinet_widget
 
+# TODO
     def edit_profile(self):
         """Открывает окно редактирования профиля"""
         dialog = QDialog(self)
@@ -622,17 +633,30 @@ class Main_Window(QMainWindow):
         instruction_label.setWordWrap(True)
         layout.addWidget(instruction_label)
         
-        # TODO
-        # Генерируем и отображаем код
-        # code = self.controller.create_code()  # Вызываем функцию контроллера для создания кода
+        # Код для бота
         code = generate_auth_code()
+        self.bot_controller.active_auth_codes[code] = self.current_user.id
+        print(code)
+        
+        # Создаем QLabel с отображением кода
         code_label = QLabel(str(code))
-        code_label.setStyleSheet(
-            "font-size: 24px; font-weight: bold; padding: 20px; "
-            "background-color: white; border: 1px solid #ddd; border-radius: 5px; "
-            "margin: 10px 0;"
-        )
+        code_label.setStyleSheet('''font-size: 24px; margin-bottom: 15px;
+                                 border: 1px solid black; border-radius: 5px;''')
+        # code_label.setStyleSheet("""
+        #     font-size: 24px; 
+        #     font-weight: bold; 
+        #     padding: 20px; 
+        #     background-color: white; 
+        #     color: black; 
+        #     border: 1px solid #ddd; 
+        #     border-radius: 5px; 
+        #     margin: 10px 0;
+        # """)
         code_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # code_label.setTextFormat(Qt.TextFormat.PlainText)  # Устанавливаем формат как обычный текст
+        # code_label.adjustSize()  # Подгоняем размер под содержимое
+        # code_label.setFixedSize(300, 70)  # Установить фиксированный размер
+        code_label.setWordWrap(True)
         layout.addWidget(code_label)
         
         # Добавляем инструкцию по использованию кода
@@ -641,17 +665,21 @@ class Main_Window(QMainWindow):
         note_label.setWordWrap(True)
         layout.addWidget(note_label)
         
+        # code_debug_label = QLabel(f"Код: {code}")
+        # layout.addWidget(code_debug_label)
+        
         # Добавляем кнопку "Закрыть"
         close_button = QPushButton("ЗАКРЫТЬ")
         close_button.setStyleSheet(
             "background-color: #1e1e1e; color: white; padding: 12px; "
             "font-weight: bold; border-radius: 5px; margin-top: 20px;"
         )
-        close_button.clicked.connect(dialog.accept)  # При нажатии кнопки закрываем диалог
+        close_button.clicked.connect(dialog.accept)
         layout.addWidget(close_button)
         
         # Показываем диалог
         dialog.exec()
+
 
     def logout(self):
         """Выход из личного кабинета"""

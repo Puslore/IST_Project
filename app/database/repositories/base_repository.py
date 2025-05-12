@@ -75,75 +75,101 @@ class BaseRepository:
         '''
         return self.session.query(self.model_class).filter(self.model_class.is_active == True)
     
-    def add(self, entity):
+    def add(self, entity) -> bool:
         '''
-        Добавление новой записи
+        Добавление новой записи и коммит изменений
         
         Arguments:
             entity (Model): Экземпляр модели для добавления
+            
+        Returns:
+            bool: Результат операции добавления и коммита
+                - True: если запись успешно добавлена и изменения зафиксированы
+                - False: если произошла ошибка при добавлении или коммите
         '''
-        self.session.add(entity)
+        try:
+            self.session.add(entity)
+            return self.commit()
+        except Exception as e:
+            self.session.rollback()
+            print(f"Ошибка при добавлении: {e}")
+            return False
     
     def update(self, id: int, **kwargs) -> bool:
         '''
-        Обновление существующей записи по ID
+        Обновление существующей записи по ID и коммит изменений
         
         Arguments:
             id (int): ID записи для обновления
             **kwargs: Атрибуты и их значения для обновления
         
         Returns:
-            bool: Результат операции обновления
-                - True: если запись найдена и успешно обновлена
-                - False: если запись с указанным ID не найдена
+            bool: Результат операции обновления и коммита
+                - True: если запись найдена, успешно обновлена и изменения зафиксированы
+                - False: если запись с указанным ID не найдена или произошла ошибка при коммите
         '''
-        entity = self.find_by_id(id)
-        if not entity:
-            return False
+        try:
+            entity = self.find_by_id(id)
+            if not entity:
+                return False
 
-        for key, value in kwargs.items():
-            if hasattr(entity, key):
-                setattr(entity, key, value)
-        
-        return True
+            for key, value in kwargs.items():
+                if hasattr(entity, key):
+                    setattr(entity, key, value)
+            
+            return self.commit()
+        except Exception as e:
+            self.session.rollback()
+            print(f"Ошибка при обновлении: {e}")
+            return False
     
     def soft_delete(self, id: int) -> bool:
         '''
-        Мягкое удаление (установка флага is_active в False)
+        Мягкое удаление (установка флага is_active в False) и коммит изменений
         
         Arguments:
             id (int): ID записи для мягкого удаления
         
         Returns:
-            bool: Результат операции мягкого удаления
-                - True: если запись найдена и успешно помечена как неактивная
-                - False: если запись не найдена или не имеет атрибута is_active
+            bool: Результат операции мягкого удаления и коммита
+                - True: если запись найдена, успешно помечена как неактивная и изменения зафиксированы
+                - False: если запись не найдена, не имеет атрибута is_active или произошла ошибка при коммите
         '''
-        entity = self.find_by_id(id)
-        if not entity:
+        try:
+            entity = self.find_by_id(id)
+            if not entity:
+                return False
+                
+            if hasattr(entity, 'is_active'):
+                entity.is_active = False
+                return self.commit()
+                
             return False
-            
-        if hasattr(entity, 'is_active'):
-            entity.is_active = False
-            return True
-            
-        return False
+        except Exception as e:
+            self.session.rollback()
+            print(f"Ошибка при мягком удалении: {e}")
+            return False
     
     def permanent_delete(self, id: int) -> bool:
         '''
-        Физическое удаление из базы данных
+        Физическое удаление из базы данных и коммит изменений
         
         Arguments:
             id (int): ID записи для удаления
         
         Returns:
-            bool: Результат операции удаления
-                - True: если запись найдена и успешно удалена
-                - False: если запись с указанным ID не найдена
+            bool: Результат операции удаления и коммита
+                - True: если запись найдена, успешно удалена и изменения зафиксированы
+                - False: если запись с указанным ID не найдена или произошла ошибка при коммите
         '''
-        entity = self.find_by_id(id)
-        if not entity:
+        try:
+            entity = self.find_by_id(id)
+            if not entity:
+                return False
+                
+            self.session.delete(entity)
+            return self.commit()
+        except Exception as e:
+            self.session.rollback()
+            print(f"Ошибка при удалении: {e}")
             return False
-            
-        self.session.delete(entity)
-        return True
