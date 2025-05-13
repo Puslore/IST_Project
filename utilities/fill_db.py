@@ -4,6 +4,7 @@ from app.database.models import User, Publication, Publisher, ShowItem
 from app.database.repositories import UserRepository, PublicationRepository, PublisherRepository, ShowItemRepository
 from app.database.session import get_session
 from .csv_operations import read_csv
+import random
 
 
 def fill_db():
@@ -56,7 +57,7 @@ def fill_db():
                 publisher_id=int(pub_data['publisher_id']),
                 on_sale=pub_data['on_sale'].lower() == 'true',
                 sales_start=datetime.strptime(pub_data['sales_start'], '%Y-%m-%d %H:%M:%S'),
-                name=pub_data['name'],
+                name=random.choice([pub_data['name'], 'журнал']),
                 description=pub_data['description']
             )
             publication_repo.add(publication)
