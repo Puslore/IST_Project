@@ -8,6 +8,7 @@ from PyQt6.QtGui import QFont
 from app.controllers.user_window_controller import Controller
 from app.controllers.bot_controller import BotController
 from app.bot.generate_auth_code import generate_auth_code
+import asyncio
 
 class Main_Window(QMainWindow):
     def __init__(self, window_controller=Controller(), bot_controller = BotController()):
@@ -181,6 +182,11 @@ class Main_Window(QMainWindow):
             f"background-color: #1e1e1e; color: white; {button_style}"
         )
         tg_button.setMinimumHeight(60)
+        # phone = self.login_phone.text()
+        # user = self.window_controller.get_user_by_phone(phone)
+        # if user is not None:
+            # self.waiting_auth_code_user = user
+        # print({user.__repr__})
         tg_button.clicked.connect(self.login_via_telegram)
         
         layout.addWidget(sms_button)
@@ -271,7 +277,12 @@ class Main_Window(QMainWindow):
 # TODO
     def login_via_telegram(self):
         """Вход с помощью кода из Telegram"""
-        print(f"Запрошен вход через Telegram для номера: {self.login_phone.text()}")
+        phone = self.login_phone.text()
+        user = self.window_controller.get_user_by_phone(phone)
+        if user is not None:
+            self.waiting_auth_code_user = user
+            print({user.__repr__})
+        print(f"Запрошен вход через Telegram для номера: {phone}")
         self.show_code_waiting_dialog()
     
     def show_code_waiting_dialog(self):
@@ -285,9 +296,14 @@ class Main_Window(QMainWindow):
         label = QLabel("Пожалуйста, введите код из Telegram:")
         layout.addWidget(label)
         
-        code_input = QLineEdit()
-        code_input.setPlaceholderText("Код из Telegram")
-        layout.addWidget(code_input)
+        self.auth_code_input = QLineEdit()
+        self.auth_code_input.setPlaceholderText("Код из Telegram")
+        layout.addWidget(self.auth_code_input)
+        
+        user = self.waiting_auth_code_user
+        self.tg_auth_code = self.bot_controller.generate_auth_code_for_user(user.id)
+        user_tg_chat_id = user.tg_chat_id
+        asyncio.create_task(self.bot_controller.send_login_code(self.tg_auth_code, user_tg_chat_id))
         
         confirm_button = QPushButton("Подтвердить")
         confirm_button.clicked.connect(lambda: self.confirm_telegram_code(dialog))
@@ -296,13 +312,27 @@ class Main_Window(QMainWindow):
         dialog.exec()
     
     def confirm_telegram_code(self, dialog):
-        """Обработка кода из Telegram (для демо просто закрываем диалог)"""
+        """Обработка кода из Telegram"""
+        user = self.waiting_auth_code_user
+        if self.auth_code_input.text() == str(self.tg_auth_code):
+            
+            # self.show_personal_cabinet(user)
+            self.login_successful(user_id=user.id)
+        
+        else:
+            # print(f'Ошибка при авторизации пользователя:\n{user_tg_chat_id=}\n{tg_auth_code=}\n{check_auth=}')
+            print('Ошибка при авторизации пользователя')
+            self.current_user = user
+            self.auth_code_input.clear()
+            self.bot_controller.remove_verify_code(self.tg_auth_code)
+            
+            self.show_code_waiting_dialog()
+            
         dialog.accept()
-        self.login_successful()
     
-    def login_successful(self):
-        """Обработка успешного входа"""
-        self.show_personal_cabinet()
+    # def login_successful(self):
+    #     """Обработка успешного входа"""
+    #     self.show_personal_cabinet()
     
     def create_personal_cabinet(self, user):
         """Создает виджет с личным кабинетом пользователя"""
