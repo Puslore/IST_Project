@@ -28,10 +28,16 @@ class UserRepository(BaseRepository):
         '''
         try:
             # Проверка существования пользователя с таким email или телефоном
-            existing_user = self.session.query(self.model_class).filter(
-                (self.model_class.email == data['email']) | 
-                (self.model_class.phone_number == data['phone_number'])
-            ).first()
+            if data['email'] is not None:
+                existing_user = self.session.query(self.model_class).filter(
+                    (self.model_class.email == data['email']) | 
+                    (self.model_class.phone_number == data['phone_number'])
+                ).first()
+            
+            else:
+                existing_user = self.session.query(self.model_class).filter(
+                    (self.model_class.phone_number == data['phone_number'])
+                ).first()
 
             if existing_user:
                 raise ValueError("Пользователь с таким email или телефоном уже существует")
