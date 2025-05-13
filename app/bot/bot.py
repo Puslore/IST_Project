@@ -11,8 +11,8 @@ bot = AsyncTeleBot(TELEGRAM_TOKEN)
 bot_controller = BotController()
 
 user_states = {}
-bot_controller.generate_auth_code_for_user(123)
-print(bot_controller.get_active_codes())
+# bot_controller.generate_auth_code_for_user(123)
+# print(bot_controller.get_active_codes())
 
 
 # Начало диалога
@@ -36,8 +36,7 @@ async def auth_code_handler(message: Message):
     auth_code = message.text.strip()
     
     # Проверка кода через контроллер бота
-    result = await bot_controller.verify_auth_code(checking_code=int(auth_code),
-                                                   telegram_chat_id=chat_id)
+    result = await bot_controller.verify_auth_code(int(auth_code), int(chat_id))
     
     if result:
         # Успешная авторизация
