@@ -15,6 +15,7 @@ class CourierRepository(BaseRepository):
                 last_name (str): Фамилия доставщика
                 salary (float): Зарплата доставщика
                 middle_name (str, optional): Отчество доставщика
+                phone_number (str): Телефон доставщика
         
         Returns:
             Courier: Созданный доставщик при успешной регистрации, None при ошибке
@@ -24,7 +25,8 @@ class CourierRepository(BaseRepository):
                 first_name=data['first_name'],
                 last_name=data['last_name'],
                 middle_name=data.get('middle_name'),
-                salary=data['salary']
+                salary=data['salary'],
+                phone_number=data['phone_number']
             )
             
             self.add(new_courier)
