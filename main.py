@@ -1,8 +1,10 @@
 import sys
 import asyncio
 import qtinter
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QDialog
+from app.gui.mode_selection_dialog import ModeSelectionDialog
 from app.gui.user_window import Main_Window
+from app.gui.admin_window import AdminWindow
 from app.bot.bot import start_bot
 from app.database.init_db import init_db
 from utilities import fill_db
@@ -38,7 +40,16 @@ def start_app():
     Функция, запускающая работу приложения
     '''
     app = QApplication(sys.argv)
-    window = Main_Window()
+    
+    dialog = ModeSelectionDialog()
+    result = dialog.exec()
+    
+    if result == QDialog.DialogCode.Accepted:
+        if dialog.is_admin_mode:
+            window = AdminWindow()
+        else:
+            window = Main_Window()
+    
     window.show()
     
     # Запуск PyQt и бота вместе
