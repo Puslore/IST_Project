@@ -95,13 +95,13 @@ class BaseRepository:
             print(f"Ошибка при добавлении: {e}")
             return False
     
-    def update(self, id: int, **kwargs) -> bool:
+    def update(self, id: int, **kwargs: dict[str: any]) -> bool:
         '''
         Обновление существующей записи по ID и коммит изменений
         
         Arguments:
             id (int): ID записи для обновления
-            **kwargs: Атрибуты и их значения для обновления
+            **kwargs (dict[str: any]): Атрибуты и их значения для обновления
         
         Returns:
             bool: Результат операции обновления и коммита
