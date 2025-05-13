@@ -14,6 +14,7 @@ class Courier(Base):
         last_name (str): Фамилия доставщика
         middle_name (Optional[str]): Отчество доставщика (опционально)
         is_active (bool): Флаг, показывающий статус активности доставщика
+        phone_number (str): Телефон доставщика
         salary (float): Зарплата доставщика
         rating (float): Рейтинг доставщика
         hire_date (datetime): Дата устройства на работу
@@ -26,6 +27,7 @@ class Courier(Base):
     first_name: Mapped[str] = mapped_column(Text, nullable=False)
     last_name: Mapped[str] = mapped_column(Text, nullable=False)
     middle_name: Mapped[Optional[str]] = mapped_column(Text)
+    phone_number: Mapped[str] = mapped_column(Text, nullable=False)
     
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     salary: Mapped[float] = mapped_column(Float, nullable=False)
