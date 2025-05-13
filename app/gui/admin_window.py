@@ -2,7 +2,8 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                            QLabel, QPushButton, QLineEdit, QStackedWidget, 
                            QTableWidget, QTableWidgetItem, QFormLayout, 
                            QMessageBox, QHeaderView, QDialog, QComboBox, 
-                           QSpinBox, QCheckBox, QDoubleSpinBox, QDateTimeEdit)
+                           QSpinBox, QCheckBox, QDoubleSpinBox, QDateTimeEdit,
+                           QScrollArea, QTextEdit)
 from PyQt6.QtCore import Qt, QDateTime
 from PyQt6.QtGui import QFont
 
@@ -313,23 +314,14 @@ class AdminWindow(QMainWindow):
         
         actions_layout.addStretch()
         
-        # Кнопка добавления публикации
-        add_publication_button = QPushButton("Добавить издание")
-        add_publication_button.setStyleSheet(
+        # Кнопка добавления записи
+        add_record_button = QPushButton("Добавить запись")
+        add_record_button.setStyleSheet(
             "background-color: #1e1e1e; color: white; padding: 8px; "
             "border-radius: 5px; min-width: 150px;"
         )
-        add_publication_button.clicked.connect(self.show_add_publication_dialog)
-        actions_layout.addWidget(add_publication_button)
-        
-        # Кнопка добавления выпуска
-        add_issue_button = QPushButton("Добавить выпуск")
-        add_issue_button.setStyleSheet(
-            "background-color: #1e1e1e; color: white; padding: 8px; "
-            "border-radius: 5px; min-width: 150px;"
-        )
-        add_issue_button.clicked.connect(self.show_add_issue_dialog)
-        actions_layout.addWidget(add_issue_button)
+        add_record_button.clicked.connect(self.add_record_to_current_table)
+        actions_layout.addWidget(add_record_button)
         
         right_panel.addLayout(actions_layout)
         
@@ -444,6 +436,349 @@ class AdminWindow(QMainWindow):
         # Настраиваем размеры столбцов
         self.data_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
     
+    def add_record_to_current_table(self):
+        """Добавляет запись в текущую выбранную таблицу"""
+        current_table = self.content_title.text().replace("Таблица: ", "")
+        
+        if current_table == "Выберите таблицу":
+            QMessageBox.warning(self, "Предупреждение", "Выберите таблицу для добавления записи")
+            return
+            
+        # Вызываем соответствующий метод в зависимости от выбранной таблицы
+        if current_table == "Пользователи":
+            self.add_user_dialog()
+        elif current_table == "Администраторы":
+            self.add_admin_dialog()
+        elif current_table == "Издательства":
+            self.add_publisher_dialog()
+        elif current_table == "Публикации":
+            self.show_add_publication_dialog()
+        elif current_table == "Выпуски":
+            self.show_add_issue_dialog()
+        elif current_table == "Доставщики":
+            self.add_courier_dialog()
+        elif current_table == "Жалобы":
+            self.add_complaint_dialog()
+        elif current_table == "Доставки":
+            self.add_delivery_dialog()
+    
+    def add_user_dialog(self):
+        """Показывает диалог для добавления нового пользователя"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Добавление пользователя")
+        dialog.setFixedWidth(500)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        form_layout = QFormLayout()
+        
+        # Стиль для полей
+        input_style = "padding: 10px; border: 1px solid black; border-radius: 5px; background-color: white;"
+        
+        # Создаем поля для формы
+        first_name_field = QLineEdit()
+        first_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Имя*:", first_name_field)
+        
+        last_name_field = QLineEdit()
+        last_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Фамилия*:", last_name_field)
+        
+        middle_name_field = QLineEdit()
+        middle_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Отчество:", middle_name_field)
+        
+        phone_field = QLineEdit()
+        phone_field.setStyleSheet(input_style)
+        form_layout.addRow("Телефон*:", phone_field)
+        
+        email_field = QLineEdit()
+        email_field.setStyleSheet(input_style)
+        form_layout.addRow("Email:", email_field)
+        
+        address_field = QLineEdit()
+        address_field.setStyleSheet(input_style)
+        form_layout.addRow("Адрес*:", address_field)
+        
+        ad_consent = QCheckBox("Согласие на рекламу")
+        form_layout.addRow("Рассылка:", ad_consent)
+        
+        layout.addLayout(form_layout)
+        
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        
+        save_button = QPushButton("СОХРАНИТЬ")
+        save_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 10px; "
+            "border-radius: 5px; min-width: 100px;"
+        )
+        
+        cancel_button = QPushButton("ОТМЕНА")
+        cancel_button.setStyleSheet(
+            "background-color: white; color: black; padding: 10px; "
+            "border: 1px solid black; border-radius: 5px; min-width: 100px;"
+        )
+        
+        buttons_layout.addWidget(save_button)
+        buttons_layout.addWidget(cancel_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        # Соединяем сигналы
+        save_button.clicked.connect(lambda: self.save_user(
+            dialog,
+            first_name_field.text(),
+            last_name_field.text(),
+            middle_name_field.text(),
+            phone_field.text(),
+            email_field.text(),
+            address_field.text(),
+            ad_consent.isChecked()
+        ))
+        
+        cancel_button.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+    
+    def save_user(self, dialog, first_name, last_name, middle_name, phone, email, address, ad_consent):
+        """Сохраняет данные нового пользователя"""
+        if not first_name or not last_name or not phone or not address:
+            QMessageBox.warning(self, "Предупреждение", "Заполните все обязательные поля")
+            return
+        
+        # Создаем объект данных
+        user_data = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'middle_name': middle_name if middle_name else None,
+            'phone_number': phone,
+            'email': email if email else None,
+            'address': address,
+            'ad_consent': ad_consent,
+            'is_active': True
+        }
+        
+        # Создаем пользователя через контроллер
+        success, result = self.admin_controller.create_user(user_data)
+        
+        if success:
+            QMessageBox.information(self, "Успех", "Пользователь успешно добавлен")
+            dialog.accept()
+            self.show_table("Пользователи")  # Обновляем таблицу
+        else:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось добавить пользователя: {result}")
+    
+    def add_admin_dialog(self):
+        """Показывает диалог для добавления нового администратора"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Добавление администратора")
+        dialog.setFixedWidth(500)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        form_layout = QFormLayout()
+        
+        # Стиль для полей
+        input_style = "padding: 10px; border: 1px solid black; border-radius: 5px; background-color: white;"
+        
+        # Создаем поля для формы
+        first_name_field = QLineEdit()
+        first_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Имя*:", first_name_field)
+        
+        last_name_field = QLineEdit()
+        last_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Фамилия*:", last_name_field)
+        
+        middle_name_field = QLineEdit()
+        middle_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Отчество:", middle_name_field)
+        
+        phone_field = QLineEdit()
+        phone_field.setStyleSheet(input_style)
+        form_layout.addRow("Телефон*:", phone_field)
+        
+        email_field = QLineEdit()
+        email_field.setStyleSheet(input_style)
+        form_layout.addRow("Email:", email_field)
+        
+        address_field = QLineEdit()
+        address_field.setStyleSheet(input_style)
+        form_layout.addRow("Адрес*:", address_field)
+        
+        salary_field = QDoubleSpinBox()
+        salary_field.setRange(0, 1000000)
+        salary_field.setValue(50000)
+        salary_field.setStyleSheet(input_style)
+        form_layout.addRow("Зарплата*:", salary_field)
+        
+        password_field = QLineEdit()
+        password_field.setStyleSheet(input_style)
+        password_field.setEchoMode(QLineEdit.EchoMode.Password)
+        form_layout.addRow("Пароль*:", password_field)
+        
+        confirm_password_field = QLineEdit()
+        confirm_password_field.setStyleSheet(input_style)
+        confirm_password_field.setEchoMode(QLineEdit.EchoMode.Password)
+        form_layout.addRow("Подтверждение пароля*:", confirm_password_field)
+        
+        layout.addLayout(form_layout)
+        
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        
+        save_button = QPushButton("СОХРАНИТЬ")
+        save_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 10px; "
+            "border-radius: 5px; min-width: 100px;"
+        )
+        
+        cancel_button = QPushButton("ОТМЕНА")
+        cancel_button.setStyleSheet(
+            "background-color: white; color: black; padding: 10px; "
+            "border: 1px solid black; border-radius: 5px; min-width: 100px;"
+        )
+        
+        buttons_layout.addWidget(save_button)
+        buttons_layout.addWidget(cancel_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        # Соединяем сигналы
+        save_button.clicked.connect(lambda: self.save_admin(
+            dialog,
+            first_name_field.text(),
+            last_name_field.text(),
+            middle_name_field.text(),
+            phone_field.text(),
+            email_field.text(),
+            address_field.text(),
+            salary_field.value(),
+            password_field.text(),
+            confirm_password_field.text()
+        ))
+        
+        cancel_button.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+    
+    def save_admin(self, dialog, first_name, last_name, middle_name, phone, email, address, salary, password, confirm_password):
+        """Сохраняет данные нового администратора"""
+        if not first_name or not last_name or not phone or not address or not password:
+            QMessageBox.warning(self, "Предупреждение", "Заполните все обязательные поля")
+            return
+        
+        if password != confirm_password:
+            QMessageBox.warning(self, "Предупреждение", "Пароли не совпадают")
+            return
+        
+        # Создаем объект данных
+        admin_data = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'middle_name': middle_name if middle_name else None,
+            'phone_number': phone,
+            'email': email if email else None,
+            'address': address,
+            'salary': salary,
+            'password': password,
+            'is_active': True
+        }
+        
+        # Создаем администратора через контроллер
+        success, result = self.admin_controller.create_admin(admin_data)
+        
+        if success:
+            QMessageBox.information(self, "Успех", "Администратор успешно добавлен")
+            dialog.accept()
+            self.show_table("Администраторы")  # Обновляем таблицу
+        else:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось добавить администратора: {result}")
+    
+    def add_publisher_dialog(self):
+        """Показывает диалог для добавления нового издательства"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Добавление издательства")
+        dialog.setFixedWidth(500)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        form_layout = QFormLayout()
+        
+        # Стиль для полей
+        input_style = "padding: 10px; border: 1px solid black; border-radius: 5px; background-color: white;"
+        
+        # Создаем поля для формы
+        name_field = QLineEdit()
+        name_field.setStyleSheet(input_style)
+        form_layout.addRow("Название*:", name_field)
+        
+        owner_field = QLineEdit()
+        owner_field.setStyleSheet(input_style)
+        form_layout.addRow("Владелец*:", owner_field)
+        
+        is_active = QCheckBox("Активно")
+        is_active.setChecked(True)
+        form_layout.addRow("Статус:", is_active)
+        
+        layout.addLayout(form_layout)
+        
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        
+        save_button = QPushButton("СОХРАНИТЬ")
+        save_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 10px; "
+            "border-radius: 5px; min-width: 100px;"
+        )
+        
+        cancel_button = QPushButton("ОТМЕНА")
+        cancel_button.setStyleSheet(
+            "background-color: white; color: black; padding: 10px; "
+            "border: 1px solid black; border-radius: 5px; min-width: 100px;"
+        )
+        
+        buttons_layout.addWidget(save_button)
+        buttons_layout.addWidget(cancel_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        # Соединяем сигналы
+        save_button.clicked.connect(lambda: self.save_publisher(
+            dialog,
+            name_field.text(),
+            owner_field.text(),
+            is_active.isChecked()
+        ))
+        
+        cancel_button.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+    
+    def save_publisher(self, dialog, name, owner, is_active):
+        """Сохраняет данные нового издательства"""
+        if not name or not owner:
+            QMessageBox.warning(self, "Предупреждение", "Заполните все обязательные поля")
+            return
+        
+        # Создаем объект данных
+        publisher_data = {
+            'name': name,
+            'owner': owner,
+            'is_active': is_active
+        }
+        
+        # Создаем издательство через контроллер
+        success, result = self.admin_controller.create_publisher(publisher_data)
+        
+        if success:
+            QMessageBox.information(self, "Успех", "Издательство успешно добавлено")
+            dialog.accept()
+            self.show_table("Издательства")  # Обновляем таблицу
+        else:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось добавить издательство: {result}")
+    
     def show_add_publication_dialog(self):
         """Показывает диалог для добавления новой публикации"""
         dialog = QDialog(self)
@@ -507,8 +842,11 @@ class AdminWindow(QMainWindow):
         
         # Подключаем события
         save_button.clicked.connect(lambda: self.add_publication(
-            dialog, name_field.text(), description_field.text(), 
-            type_combo.currentText(), publisher_combo.currentData(), 
+            dialog, 
+            name_field.text(), 
+            description_field.text(), 
+            type_combo.currentText(), 
+            publisher_combo.currentData(), 
             on_sale_check.isChecked()
         ))
         
@@ -617,10 +955,15 @@ class AdminWindow(QMainWindow):
         
         # Подключаем события
         save_button.clicked.connect(lambda: self.add_issue(
-            dialog, name_field.text(), description_field.text(), 
-            issue_number.value(), issue_date.dateTime().toString('yyyy-MM-dd HH:mm:ss'),
-            publication_combo.currentData(), cost_field.value(),
-            special_edition.isChecked(), on_sale_check.isChecked()
+            dialog, 
+            name_field.text(), 
+            description_field.text(), 
+            issue_number.value(), 
+            issue_date.dateTime().toString('yyyy-MM-dd HH:mm:ss'),
+            publication_combo.currentData(), 
+            cost_field.value(),
+            special_edition.isChecked(), 
+            on_sale_check.isChecked()
         ))
         
         cancel_button.clicked.connect(dialog.reject)
@@ -659,3 +1002,322 @@ class AdminWindow(QMainWindow):
             self.show_table("Выпуски")
         else:
             QMessageBox.warning(self, "Ошибка", f"Не удалось добавить выпуск: {result}")
+    
+    def add_courier_dialog(self):
+        """Показывает диалог для добавления нового курьера"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Добавление курьера")
+        dialog.setFixedWidth(500)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        form_layout = QFormLayout()
+        
+        # Стиль для полей
+        input_style = "padding: 10px; border: 1px solid black; border-radius: 5px; background-color: white;"
+        
+        # Поля для формы
+        first_name_field = QLineEdit()
+        first_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Имя*:", first_name_field)
+        
+        last_name_field = QLineEdit()
+        last_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Фамилия*:", last_name_field)
+        
+        middle_name_field = QLineEdit()
+        middle_name_field.setStyleSheet(input_style)
+        form_layout.addRow("Отчество:", middle_name_field)
+        
+        phone_field = QLineEdit()
+        phone_field.setStyleSheet(input_style)
+        form_layout.addRow("Телефон*:", phone_field)
+        
+        email_field = QLineEdit()
+        email_field.setStyleSheet(input_style)
+        form_layout.addRow("Email:", email_field)
+        
+        address_field = QLineEdit()
+        address_field.setStyleSheet(input_style)
+        form_layout.addRow("Адрес*:", address_field)
+        
+        salary_field = QDoubleSpinBox()
+        salary_field.setRange(0, 500000)
+        salary_field.setValue(35000)
+        salary_field.setStyleSheet(input_style)
+        form_layout.addRow("Зарплата*:", salary_field)
+        
+        rating_field = QDoubleSpinBox()
+        rating_field.setRange(0, 5)
+        rating_field.setValue(5)
+        rating_field.setSingleStep(0.1)
+        rating_field.setStyleSheet(input_style)
+        form_layout.addRow("Рейтинг:", rating_field)
+        
+        layout.addLayout(form_layout)
+        
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        
+        save_button = QPushButton("СОХРАНИТЬ")
+        save_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 10px; "
+            "border-radius: 5px; min-width: 100px;"
+        )
+        
+        cancel_button = QPushButton("ОТМЕНА")
+        cancel_button.setStyleSheet(
+            "background-color: white; color: black; padding: 10px; "
+            "border: 1px solid black; border-radius: 5px; min-width: 100px;"
+        )
+        
+        buttons_layout.addWidget(save_button)
+        buttons_layout.addWidget(cancel_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        # Соединяем сигналы
+        save_button.clicked.connect(lambda: self.save_courier(
+            dialog,
+            first_name_field.text(),
+            last_name_field.text(),
+            middle_name_field.text(),
+            phone_field.text(),
+            email_field.text(),
+            address_field.text(),
+            salary_field.value(),
+            rating_field.value()
+        ))
+        
+        cancel_button.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+    
+    def save_courier(self, dialog, first_name, last_name, middle_name, phone, email, address, salary, rating):
+        """Сохраняет данные нового курьера"""
+        if not first_name or not last_name or not phone or not address:
+            QMessageBox.warning(self, "Предупреждение", "Заполните все обязательные поля")
+            return
+        
+        # Создаем объект данных
+        courier_data = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'middle_name': middle_name if middle_name else None,
+            'phone_number': phone,
+            'email': email if email else None,
+            'address': address,
+            'salary': salary,
+            'rating': rating,
+            'is_active': True
+        }
+        
+        # Создаем курьера через контроллер
+        success, result = self.admin_controller.create_courier(courier_data)
+        
+        if success:
+            QMessageBox.information(self, "Успех", "Курьер успешно добавлен")
+            dialog.accept()
+            self.show_table("Доставщики")  # Обновляем таблицу
+        else:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось добавить курьера: {result}")
+    
+    def add_complaint_dialog(self):
+        """Показывает диалог для добавления новой жалобы"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Добавление жалобы")
+        dialog.setFixedWidth(500)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        form_layout = QFormLayout()
+        
+        # Стиль для полей
+        input_style = "padding: 10px; border: 1px solid black; border-radius: 5px; background-color: white;"
+        
+        # Получаем список курьеров для выбора
+        couriers = self.admin_controller.get_couriers()
+        courier_combo = QComboBox()
+        for courier in couriers:
+            courier_combo.addItem(f"{courier.first_name} {courier.last_name}", courier.id)
+        courier_combo.setStyleSheet(input_style)
+        form_layout.addRow("Доставщик*:", courier_combo)
+        
+        description_field = QTextEdit()
+        description_field.setStyleSheet(input_style)
+        description_field.setMinimumHeight(100)
+        form_layout.addRow("Описание жалобы*:", description_field)
+        
+        layout.addLayout(form_layout)
+        
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        
+        save_button = QPushButton("СОХРАНИТЬ")
+        save_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 10px; "
+            "border-radius: 5px; min-width: 100px;"
+        )
+        
+        cancel_button = QPushButton("ОТМЕНА")
+        cancel_button.setStyleSheet(
+            "background-color: white; color: black; padding: 10px; "
+            "border: 1px solid black; border-radius: 5px; min-width: 100px;"
+        )
+        
+        buttons_layout.addWidget(save_button)
+        buttons_layout.addWidget(cancel_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        # Соединяем сигналы
+        save_button.clicked.connect(lambda: self.save_complaint(
+            dialog,
+            courier_combo.currentData(),
+            description_field.toPlainText()
+        ))
+        
+        cancel_button.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+    
+    def save_complaint(self, dialog, courier_id, description):
+        """Сохраняет данные новой жалобы"""
+        if not courier_id or not description:
+            QMessageBox.warning(self, "Предупреждение", "Заполните все обязательные поля")
+            return
+        
+        # Создаем объект данных
+        complaint_data = {
+            'courier_id': courier_id,
+            'description': description
+        }
+        
+        # Создаем жалобу через контроллер
+        success, result = self.admin_controller.create_complaint(complaint_data)
+        
+        if success:
+            QMessageBox.information(self, "Успех", "Жалоба успешно добавлена")
+            dialog.accept()
+            self.show_table("Жалобы")  # Обновляем таблицу
+        else:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось добавить жалобу: {result}")
+    
+    def add_delivery_dialog(self):
+        """Показывает диалог для добавления новой доставки"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Добавление доставки")
+        dialog.setFixedWidth(500)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        form_layout = QFormLayout()
+        
+        # Стиль для полей
+        input_style = "padding: 10px; border: 1px solid black; border-radius: 5px; background-color: white;"
+        
+        # Получаем список выпусков для выбора
+        issues = self.admin_controller.get_issues()
+        issue_combo = QComboBox()
+        for issue in issues:
+            issue_combo.addItem(f"{issue.name} (№{issue.issue_number})", issue.id)
+        issue_combo.setStyleSheet(input_style)
+        form_layout.addRow("Выпуск*:", issue_combo)
+        
+        recipient_field = QLineEdit()
+        recipient_field.setStyleSheet(input_style)
+        form_layout.addRow("Получатель*:", recipient_field)
+        
+        recipient_phone_field = QLineEdit()
+        recipient_phone_field.setStyleSheet(input_style)
+        recipient_phone_field.setPlaceholderText("+7XXXXXXXXXX")
+        form_layout.addRow("Телефон получателя*:", recipient_phone_field)
+        
+        address_field = QLineEdit()
+        address_field.setStyleSheet(input_style)
+        form_layout.addRow("Адрес доставки*:", address_field)
+        
+        delivery_date = QDateTimeEdit()
+        delivery_date.setDateTime(QDateTime.currentDateTime())
+        delivery_date.setStyleSheet(input_style)
+        form_layout.addRow("Дата доставки:", delivery_date)
+        
+        is_delivered = QCheckBox("Доставлено")
+        form_layout.addRow("Статус:", is_delivered)
+        
+        layout.addLayout(form_layout)
+        
+        # Кнопки
+        buttons_layout = QHBoxLayout()
+        
+        save_button = QPushButton("СОХРАНИТЬ")
+        save_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 10px; "
+            "border-radius: 5px; min-width: 100px;"
+        )
+        
+        cancel_button = QPushButton("ОТМЕНА")
+        cancel_button.setStyleSheet(
+            "background-color: white; color: black; padding: 10px; "
+            "border: 1px solid black; border-radius: 5px; min-width: 100px;"
+        )
+        
+        buttons_layout.addWidget(save_button)
+        buttons_layout.addWidget(cancel_button)
+        
+        layout.addLayout(buttons_layout)
+        
+        # Сохраняем ссылку на поле телефона
+        self.recipient_phone_field = recipient_phone_field
+        
+        # Соединяем сигналы
+        save_button.clicked.connect(lambda: self.save_delivery(
+            dialog,
+            issue_combo.currentData(),
+            recipient_field.text(),
+            recipient_phone_field.text(),
+            address_field.text(),
+            delivery_date.dateTime().toString('yyyy-MM-dd HH:mm:ss'),
+            is_delivered.isChecked()
+        ))
+        
+        cancel_button.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+    
+    def save_delivery(self, dialog, issue_id, recipient, recipient_phone, address, delivery_date, is_delivered):
+        """Сохраняет данные новой доставки"""
+        if not issue_id or not recipient or not recipient_phone or not address:
+            QMessageBox.warning(self, "Предупреждение", "Заполните все обязательные поля")
+            return
+        
+        # Получаем информацию о выпуске для определения стоимости
+        issue = self.admin_controller.get_issue_by_id(issue_id)
+        if not issue:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось найти выпуск с ID {issue_id}")
+            return
+        
+        # Создаем объект данных для доставки
+        delivery_data = {
+            'item_id': issue_id,
+            'item_type': issue.publication_type,
+            'recipient_name': recipient,
+            'recipient_address': address,
+            'recipient_phone': recipient_phone,
+            'item_cost': issue.cost,
+            'is_delivered': is_delivered
+        }
+        
+        # Добавляем дату доставки, если доставка уже выполнена
+        if is_delivered:
+            delivery_data['delivery_date'] = delivery_date
+        
+        # Создаем доставку через контроллер
+        success, result = self.admin_controller.create_delivery(delivery_data)
+        
+        if success:
+            QMessageBox.information(self, "Успех", "Доставка успешно добавлена")
+            dialog.accept()
+            self.show_table("Доставки")
+        else:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось добавить доставку: {result}")
