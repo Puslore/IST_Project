@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
-from app.database.models import User, Publication, Publisher, ShowItem
-from app.database.repositories import UserRepository, PublicationRepository, PublisherRepository, ShowItemRepository
+from app.database.models import User, Publication, Publisher, Issue
+from app.database.repositories import UserRepository, PublicationRepository, PublisherRepository, IssueRepository
 from app.database.session import get_session
 from .csv_operations import read_csv
 import random
@@ -30,7 +30,7 @@ def fill_db():
         user_repo = UserRepository(session)
         publication_repo = PublicationRepository(session)
         publisher_repo = PublisherRepository(session)
-        show_item_repo = ShowItemRepository(session)
+        show_item_repo = Issue(session)
 
         # Добавление издательств
         for pub_data in publishers_data:
@@ -90,7 +90,7 @@ def fill_db():
             # Обработка первого столбца с BOM-маркером
             issue_number_key = next(key for key in item_data.keys() if 'issue_number' in key)
             
-            show_item = ShowItem(
+            show_item = Issue(
                 issue_number=int(item_data[issue_number_key]),
                 issue_date=datetime.strptime(item_data['issue_date'], '%Y-%m-%d %H:%M:%S'),
                 is_special_edition=item_data['is_special_edition'].lower() == 'true',
