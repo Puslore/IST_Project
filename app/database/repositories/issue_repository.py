@@ -14,7 +14,7 @@ class IssueRepository(BaseRepository):
             data (dict): Словарь с данными выпуска, содержащий:
                 name (str): Название выпуска
                 description (str): Описание выпуска
-                publication_type (str): Тип издания
+                issue_type (str): Тип издания
                 publication_series_id (int): ID серии издания
                 issue_number (int): Номер выпуска
                 cost (float): Стоимость выпуска
@@ -28,7 +28,7 @@ class IssueRepository(BaseRepository):
             new_show_item = Issue(
                 name=data['name'],
                 description=data['description'],
-                publication_type=data['publication_type'],
+                issue_type=data['publication_type'],
                 publication_series_id=data['publication_series_id'],
                 issue_number=data['issue_number'],
                 issue_date=datetime.now(),
