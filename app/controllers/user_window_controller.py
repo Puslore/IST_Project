@@ -1,5 +1,5 @@
 from app.database.session import get_session
-from app.database.repositories import UserRepository, ShowItemRepository, PublicationRepository
+from app.database.repositories import UserRepository, IssueRepository, PublicationRepository
 
 
 class Controller:
@@ -16,7 +16,7 @@ class Controller:
             self.session = session
             self.user_repo = UserRepository(session)
             self.publication_repo = PublicationRepository(session)
-            self.show_item_repo = ShowItemRepository(session)
+            self.show_item_repo = IssueRepository(session)
     
     def create_user(self, user_data: dict):
         """

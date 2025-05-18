@@ -2,7 +2,7 @@ from datetime import datetime
 from app.database.session import get_session
 from app.database.repositories import (AdminRepository, UserRepository,
                                        PublicationRepository, PublisherRepository,
-                                       ShowItemRepository, CourierRepository,
+                                       IssueRepository, CourierRepository,
                                        ComplaintRepository, DeliveryRepository)
 
 class AdminController:
@@ -21,7 +21,7 @@ class AdminController:
             self.user_repo = UserRepository(session)
             self.publication_repo = PublicationRepository(session)
             self.publisher_repo = PublisherRepository(session)
-            self.show_item_repo = ShowItemRepository(session)
+            self.issue_repo = IssueRepository(session)
             self.courier_repo = CourierRepository(session)
             self.complaint_repo = ComplaintRepository(session)
             self.delivery_repo = DeliveryRepository(session)
@@ -77,7 +77,8 @@ class AdminController:
         try:
             if table_name == "Пользователи":
                 users = self.user_repo.get_all().all()
-                headers = ["ID", "Имя", "Фамилия", "Телефон", "Email", "Адрес", "Дата регистрации", "Активен"]
+                headers = ["ID", "Имя", "Фамилия", "Телефон", "Email",
+                           "Адрес", "Дата регистрации", "Активен"]
                 data = [
                     (u.id, u.first_name, u.last_name, u.phone_number, 
                      u.email, u.address, u.registration_date, u.is_active)
@@ -87,7 +88,8 @@ class AdminController:
                 
             elif table_name == "Администраторы":
                 admins = self.admin_repo.get_all().all()
-                headers = ["ID", "Имя", "Фамилия", "Телефон", "Email", "Зарплата", "Активен"]
+                headers = ["ID", "Имя", "Фамилия", "Телефон", "Email",
+                           "Зарплата", "Активен"]
                 data = [
                     (a.id, a.first_name, a.last_name, a.phone_number, 
                      a.email, a.salary, a.is_active)
@@ -97,7 +99,8 @@ class AdminController:
                 
             elif table_name == "Издательства":
                 publishers = self.publisher_repo.get_all().all()
-                headers = ["ID", "Название", "Владелец", "Дата начала продаж", "Активен"]
+                headers = ["ID", "Название", "Владелец",
+                           "Дата начала продаж", "Активен"]
                 data = [
                     (p.id, p.name, p.owner, p.sales_start, p.is_active)
                     for p in publishers
@@ -115,19 +118,21 @@ class AdminController:
                 return headers, data
                 
             elif table_name == "Выпуски":
-                show_items = self.show_item_repo.get_all().all()
-                headers = ["ID", "Название", "Номер", "Тип", "Издание", "Цена", "В продаже"]
+                issues = self.issue_repo.get_all().all()
+                headers = ["ID", "Название", "Номер", "Тип", "Издание",
+                           "Цена", "В продаже"]
                 data = [
-                    (s.id, s.name, s.issue_number, s.publication_type, 
-                     s.publication_series.name if s.publication_series else "Нет", 
+                    (s.id, s.name, s.issue_number, s.issue_type, 
+                     s.publication_id if s.publication_id else "Нет", 
                      s.cost, s.on_sale)
-                    for s in show_items
+                    for s in issues
                 ]
                 return headers, data
                 
             elif table_name == "Доставщики":
                 couriers = self.courier_repo.get_all().all()
-                headers = ["ID", "Имя", "Фамилия", "Телефон", "Зарплата", "Рейтинг", "Активен"]
+                headers = ["ID", "Имя", "Фамилия", "Телефон",
+                           "Зарплата", "Рейтинг", "Активен"]
                 data = [
                     (c.id, c.first_name, c.last_name, c.phone_number, 
                      c.salary, c.rating, c.is_active)
@@ -147,15 +152,20 @@ class AdminController:
                 
             elif table_name == "Доставки":
                 deliveries = self.delivery_repo.get_all().all()
-                headers = ["ID", "Тип товара", "Получатель", "Телефон", "Адрес", "Стоимость", "Доставлено"]
-                data = [
-                    (d.id, d.item_type, d.recipient_name, d.recipient_phone,
-                    d.recipient_address, d.item_cost, d.is_delivered)
-                    for d in deliveries
-                ]
+                headers = ["ID", "Тип издания", "Курьер", "Получатель",
+                           "Телефон", "Адрес", "Стоимость", "Доставлено"]
+                data = []
+                for d in deliveries:
+                    courier_name = f"{d.courier.first_name} {d.courier.last_name}" \
+                        if hasattr(d, 'courier') and d.courier else "Не назначен"
+                    delivery_row = (
+                        d.id, d.item_type, courier_name, d.recipient_name, 
+                        d.recipient_phone, d.recipient_address, d.item_cost, d.is_delivered
+                    )
+                    data.append(delivery_row)
                 return headers, data
 
-            
+
             return [], []
         
         except Exception as err:
@@ -202,10 +212,28 @@ class AdminController:
         """
         try:
             publication = self.publication_repo.find_by_id(publication_id)
-            return publication.publication_type if publication else None
+            return publication.issue_type if publication else None
         except Exception as err:
             print(f"Ошибка получения типа публикации: {err}")
             return None
+    
+    def get_issue_type(self, issue_id):
+        """
+        Получает тип выпуска по ID
+        
+        Args:
+            issue_id (int): ID выпуска
+            
+        Returns:
+            str: Тип выпуска
+        """
+        try:
+            issue = self.issue_repo.find_by_id(issue_id)
+            return issue.issue_type if issue else None
+        except Exception as err:
+            print(f"Ошибка получения типа выпуска: {err}")
+            return None
+    
     
     def get_couriers(self):
         """
@@ -250,7 +278,7 @@ class AdminController:
             if 'registration_date' not in user_data:
                 user_data['registration_date'] = datetime.now()
                 
-            user = self.user_repo.create_user(user_data)
+            user = self.user_repo.registration(user_data)
             return True, user
         except Exception as err:
             print(f"Ошибка создания пользователя: {err}")
@@ -378,7 +406,7 @@ class AdminController:
                 issue = self.show_item_repo.find_by_id(issue_id)
                 if issue:
                     delivery_data['item_id'] = issue_id
-                    delivery_data['item_type'] = issue.publication_type
+                    delivery_data['item_type'] = issue.issue_type
                 else:
                     return False, f"Выпуск с ID {issue_id} не найден"
             
