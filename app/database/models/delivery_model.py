@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import Boolean, DateTime, Text, Integer, Float
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import Optional, List
+from sqlalchemy import Boolean, DateTime, Text, Integer, Float, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from . import Base
 
 
@@ -20,22 +20,26 @@ class Delivery(Base):
         item_cost (float): Стоимость товара
         is_delivered (bool): Флаг статуса доставки
         delivery_date (Optional[datetime]): Дата и время доставки
+        courier_id (int): Идентефикатор курьера
+        courier (Courier): Связь с курьером
     '''
     __tablename__ = 'deliveries'
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    item_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    item_id: Mapped[int] = mapped_column(ForeignKey('issues.id'), nullable=False)
     item_type: Mapped[str] = mapped_column(Text, nullable=False)
 
     recipient_name: Mapped[str] = mapped_column(Text, nullable=False)
-    recipient_tg_chat_id: Mapped[Optional[int]] = mapped_column(Integer)
+    recipient_tg_chat_id: Mapped[Optional[int]] = mapped_column(ForeignKey('users.tg_chat_id'))
     recipient_address: Mapped[str] = mapped_column(Text, nullable=False)
     recipient_phone: Mapped[str] = mapped_column(Text, nullable=False)
 
     item_cost: Mapped[float] = mapped_column(Float, nullable=False)
     is_delivered: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     delivery_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    courier_id: Mapped[int] = mapped_column(ForeignKey('couriers.id'), nullable=False)
+    courier: Mapped['Courier'] = relationship('Courier', back_populates='deliveries')
 
     def __repr__(self) -> str:
         '''

@@ -2,7 +2,7 @@ from .base_model import Base
 from .user_model import User
 from .publication_model import Publication
 from .publisher_model import Publisher
-from .show_item_model import ShowItem
+from .issue_model import Issue
 from .admin_model import Admin
 from .complaint_model import Complaint
 from .courier_model import Courier
@@ -13,7 +13,7 @@ __all__ = [
     'User',
     'Publication',
     'Publisher',
-    'ShowItem',
+    'Issue',
     'Admin',
     'Complaint',
     'Courier',

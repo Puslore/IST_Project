@@ -20,7 +20,7 @@ class Publication(Base):
         name (str): Название издания
         description (str): Описание издания
         
-        show_items (List[ShowItem]): Связанные выпуски данного издания
+        show_items (List["Issue"]): Связанные выпуски данного издания
         subscribers (List[User]): Пользователи, подписанные на издание
     '''
     __tablename__ = 'publications'
@@ -37,7 +37,7 @@ class Publication(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     # pg: Mapped[Optional[int]] = mapped_column(Integer)
     
-    show_items: Mapped[List["ShowItem"]] = relationship("ShowItem", back_populates="publication_series")
+    issues: Mapped[List["Issue"]] = relationship("Issue", back_populates="publication")
 
     subscribers: Mapped[List["User"]] = relationship(
         "User",
@@ -71,8 +71,8 @@ class Publication(Base):
         Возвращает последний выпуск издания
         
         Returns:
-            ShowItem: Последний выпуск или None, если выпусков нет
+            Issue: Последний выпуск или None, если выпусков нет
         '''
-        if not self.show_items:
+        if not self.issues:
             return None
-        return max(self.show_items, key=lambda issue: issue.issue_date)
+        return max(self.issues, key=lambda issue: issue.issue_date)

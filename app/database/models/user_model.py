@@ -35,7 +35,7 @@ class User(Base):
     phone_number: Mapped[str] = mapped_column(Text, nullable=False)
     email: Mapped[Optional[str]] = mapped_column(Text)
     address: Mapped[str] = mapped_column(Text, nullable=False)
-    tg_chat_id: Mapped[Optional[int]] = mapped_column(Integer)
+    tg_chat_id: Mapped[Optional[int]] = mapped_column(Integer, unique=True)
 
     ad_consent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     registration_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)

@@ -18,6 +18,7 @@ class Courier(Base):
         salary (float): Зарплата доставщика
         rating (float): Рейтинг доставщика
         hire_date (datetime): Дата устройства на работу
+        deliveries (List["Delivery"]): Список доставок доставщика
         complaints (List["Complaint"]): Список претензий на доставщика
     '''
     __tablename__ = 'couriers'
@@ -34,6 +35,7 @@ class Courier(Base):
     rating: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)
     hire_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     
+    deliveries: Mapped[List['Delivery']] = relationship('Delivery', back_populates="courier")
     complaints: Mapped[List["Complaint"]] = relationship("Complaint", back_populates="courier")
     
     def __repr__(self) -> str:

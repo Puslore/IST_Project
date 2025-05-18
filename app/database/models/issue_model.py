@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from . import Base
 
 
-class ShowItem(Base):
+class Issue(Base):
     '''
     Класс, определяющий конкретный выпуск печатного издания
     
@@ -18,8 +18,8 @@ class ShowItem(Base):
         is_special_edition (bool): Флаг специального выпуска
         
         publication_type (str): Тип издания (газета, журнал)
-        publication_series_id (int): Идентификатор серии издания (внешний ключ)
-        publication_series (Publication): Связь с серией публикации
+        publication_id (int): Идентификатор серии издания (внешний ключ)
+        publication (Publication): Связь с серией публикации
         
         on_sale (bool): Флаг, указывающий, доступно ли издание для продажи
         name (str): Название выпуска
@@ -27,25 +27,23 @@ class ShowItem(Base):
         pg (Optional[int]): Возрастное ограничение (опционально)
         
         cost (float): Стоимость данного выпуска
-        discount (bool): Флаг наличия скидки на выпуск
+        is_discount (bool): Флаг наличия скидки на выпуск
+        discount (int): Размер скидки при наличии
     '''
-    __tablename__ = 'show_items'
+    __tablename__ = 'issues'
     
     id: Mapped[int] = mapped_column(primary_key=True)
     
     issue_number: Mapped[int] = mapped_column(Integer, nullable=False)
     issue_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     is_special_edition: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-
-    publication_type: Mapped[str] = mapped_column(Text, nullable=False)
-    publication_series_id: Mapped[int] = mapped_column(ForeignKey("publications.id"), nullable=False)
-    publication_series: Mapped["Publication"] = relationship("Publication", back_populates="show_items")
+    issue_type: Mapped[str] = mapped_column(Text, nullable=False)
+    publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"), nullable=False)
+    publication: Mapped["Publication"] = relationship("Publication", back_populates="issues")
     on_sale: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-
     name: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     pg: Mapped[Optional[int]] = mapped_column(Integer)
-
     cost: Mapped[float] = mapped_column(Float, nullable=True)
     is_discount: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     discount: Mapped[Optional[int]] = mapped_column(Integer)
@@ -62,15 +60,15 @@ class ShowItem(Base):
     def get_price(self) -> float:
         '''
         Рассчитывает итоговую цену выпуска с учетом скидки
-        
+
         Returns:
             float: Итоговая цена после применения скидки (если есть)
         '''
         if not self.cost:
             return 0.0
-            
+
         if self.discount:
-            return self.cost * self.discount
+            return self.cost * (self.discount / 100.0)
 
         return self.cost
 
