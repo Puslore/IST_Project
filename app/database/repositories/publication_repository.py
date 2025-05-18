@@ -5,7 +5,7 @@ class PublicationRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(Publication, session)
     
-    def create_publication(self, data: dict) -> Publication:
+    def create_publication(self, data: dict) -> Publication | None:
         '''
         Создает новое печатное издание
         

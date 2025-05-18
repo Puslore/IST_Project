@@ -5,7 +5,7 @@ class PublisherRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(Publisher, session)
     
-    def create_publisher(self, data: dict) -> Publisher:
+    def create_publisher(self, data: dict) -> Publisher | None:
         '''
         Создает нового издателя
         

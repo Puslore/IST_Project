@@ -6,7 +6,7 @@ from .courier_repository import CourierRepository
 from .delivery_repository import DeliveryRepository
 from .publication_repository import PublicationRepository
 from .publisher_repository import PublisherRepository
-from .show_item_repository import ShowItemRepository
+from .issue_repository import IssueRepository
 
 
 __all__ = [
@@ -17,5 +17,5 @@ __all__ = [
     'DeliveryRepository',
     'PublicationRepository',
     'PublisherRepository',
-    'ShowItemRepository'
+    'IssueRepository'
 ]

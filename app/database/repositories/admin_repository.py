@@ -5,7 +5,7 @@ class AdminRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(Admin, session)
     
-    def create_admin(self, data: dict) -> Admin:
+    def create_admin(self, data: dict) -> Admin | None:
         '''
         Создает нового администратора
         
@@ -59,7 +59,7 @@ class AdminRepository(BaseRepository):
             print(f"Ошибка создания администратора: {err}")
             return None
     
-    def authenticate(self, phone_number: str, password: str) -> Admin:
+    def authenticate(self, phone_number: str, password: str) -> Admin | None:
         '''
         Аутентификация администратора по телефону и паролю
         

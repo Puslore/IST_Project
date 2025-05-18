@@ -6,7 +6,7 @@ class DeliveryRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(Delivery, session)
     
-    def create_delivery(self, data: dict) -> Delivery:
+    def create_delivery(self, data: dict) -> Delivery | None:
         '''
         Создает новую запись о поставке
         

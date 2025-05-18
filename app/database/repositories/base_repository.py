@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import Any
 
 class BaseRepository:
     '''Базовый репозиторий, описывающий CRUD-операции моделей.'''
@@ -95,7 +96,7 @@ class BaseRepository:
             print(f"Ошибка при добавлении: {e}")
             return False
     
-    def update(self, id: int, **kwargs: dict[str: any]) -> bool:
+    def update(self, id: int, **kwargs: Any) -> bool:
         '''
         Обновление существующей записи по ID и коммит изменений
         

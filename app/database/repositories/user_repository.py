@@ -6,7 +6,7 @@ class UserRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(User, session)
 
-    def registration(self, data: dict) -> User:
+    def registration(self, data: dict) -> User | None:
         '''
         Регистрирует нового пользователя в системе
 

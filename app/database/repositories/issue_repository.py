@@ -1,12 +1,12 @@
 from . import BaseRepository
-from app.database.models import ShowItem
+from app.database.models import Issue
 from datetime import datetime
 
-class ShowItemRepository(BaseRepository):
+class IssueRepository(BaseRepository):
     def __init__(self, session):
-        super().__init__(ShowItem, session)
+        super().__init__(Issue, session)
     
-    def create_show_item(self, data: dict) -> ShowItem:
+    def create_show_item(self, data: dict) -> Issue | None:
         '''
         Создает новый выпуск издания
         
@@ -25,7 +25,7 @@ class ShowItemRepository(BaseRepository):
             ShowItem: Созданный выпуск при успешной операции, None при ошибке
         '''
         try:
-            new_show_item = ShowItem(
+            new_show_item = Issue(
                 name=data['name'],
                 description=data['description'],
                 publication_type=data['publication_type'],

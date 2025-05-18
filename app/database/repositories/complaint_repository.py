@@ -5,7 +5,7 @@ class ComplaintRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(Complaint, session)
     
-    def create_complaint(self, data: dict) -> Complaint:
+    def create_complaint(self, data: dict) -> Complaint | None:
         '''
         Создает новую претензию на доставщика
         

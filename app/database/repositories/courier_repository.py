@@ -5,7 +5,7 @@ class CourierRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(Courier, session)
     
-    def create_courier(self, data: dict) -> Courier:
+    def create_courier(self, data: dict) -> Courier | None:
         '''
         Создает нового доставщика в системе
         
@@ -40,7 +40,8 @@ class CourierRepository(BaseRepository):
             print(f"Ошибка создания доставщика: {err}")
             return None
     
-    def get_by_rating(self, min_rating: float = None, max_rating: float = None):
+    def get_by_rating(self, min_rating: float | None = None,
+                                  max_rating: float | None = None):
         '''
         Получает доставщиков с указанным рейтингом
         
