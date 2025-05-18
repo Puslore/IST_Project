@@ -379,8 +379,23 @@ class Main_Window(QMainWindow):
                 subscriptions_table.setItem(row, 0, QTableWidgetItem(pub.name))
                 subscriptions_table.setItem(row, 1, QTableWidgetItem(pub.publication_type))
                 subscriptions_table.setItem(row, 2, QTableWidgetItem("Активна" if pub.on_sale else "Не активна"))
+                
+                # Добавляем кнопку для просмотра последнего выпуска
+                if hasattr(pub, 'issues') and pub.issues:
+                    latest_issue = None
+                    try:
+                        latest_issue = pub.get_latest_issue()
+                    except Exception:
+                        pass
+                        
+                    if latest_issue:
+                        issue_button = QPushButton("Последний выпуск")
+                        issue_button.setStyleSheet("background-color: #1e1e1e; color: white; padding: 5px;")
+                        issue_button.clicked.connect(lambda checked, i=latest_issue: self.show_issue_details(i))
+                        subscriptions_table.setCellWidget(row, 3, issue_button)
             
             self.subscriptions_list = subscriptions_table
+
         else:
             self.subscriptions_list = QLabel("У вас пока нет активных подписок")
             self.subscriptions_list.setStyleSheet(
@@ -389,6 +404,7 @@ class Main_Window(QMainWindow):
             )
         
         layout.addWidget(self.subscriptions_list)
+
 
         # Добавляем дополнительные секции
         
@@ -441,6 +457,68 @@ class Main_Window(QMainWindow):
         layout.addStretch()
         
         return cabinet_widget
+    
+    def show_issue_details(self, issue):
+        """Показывает детальную информацию о выпуске"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"{issue.name} (№{issue.issue_number})")
+        dialog.setFixedSize(400, 300)
+        dialog.setStyleSheet("background-color: #f8f3e6;")
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Информация о выпуске
+        title = QLabel(issue.name)
+        title.setStyleSheet("font-size: 18px; font-weight: bold;")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+        
+        # Основные данные
+        details_layout = QFormLayout()
+        details_layout.addRow("Тип издания:", QLabel(issue.publication_type))
+        details_layout.addRow("Номер выпуска:", QLabel(str(issue.issue_number)))
+        details_layout.addRow("Дата выпуска:", QLabel(issue.issue_date.strftime("%d.%m.%Y")))
+        
+        # Добавляем стоимость с учетом скидки
+        if hasattr(issue, "is_discount") and issue.is_discount and issue.discount:
+            original_price = QLabel(f"{issue.cost} руб.")
+            original_price.setStyleSheet("text-decoration: line-through;")
+            
+            discount_price = issue.cost - (issue.cost * issue.discount / 100)
+            discounted_price = QLabel(f"{discount_price:.2f} руб. ({issue.discount}% скидка)")
+            discounted_price.setStyleSheet("color: red; font-weight: bold;")
+            
+            price_layout = QHBoxLayout()
+            price_layout.addWidget(original_price)
+            price_layout.addWidget(discounted_price)
+            
+            details_layout.addRow("Стоимость:", price_layout)
+        else:
+            details_layout.addRow("Стоимость:", QLabel(f"{issue.cost} руб."))
+        
+        layout.addLayout(details_layout)
+        
+        # Описание
+        description_label = QLabel("Описание:")
+        description_label.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        layout.addWidget(description_label)
+        
+        description = QLabel(issue.description)
+        description.setWordWrap(True)
+        description.setStyleSheet("background-color: white; padding: 10px; border-radius: 5px;")
+        layout.addWidget(description)
+        
+        # Кнопка закрытия
+        close_button = QPushButton("ЗАКРЫТЬ")
+        close_button.setStyleSheet(
+            "background-color: #1e1e1e; color: white; padding: 10px; "
+            "border-radius: 5px; margin-top: 20px;"
+        )
+        close_button.clicked.connect(dialog.accept)
+        layout.addWidget(close_button)
+        
+        dialog.exec()
+
 
 # TODO
     def edit_profile(self):

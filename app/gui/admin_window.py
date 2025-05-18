@@ -988,7 +988,7 @@ class AdminWindow(QMainWindow):
             'issue_number': issue_number,
             'issue_date': issue_date,
             'publication_series_id': publication_id,
-            'publication_type': publication_type,
+            'issue_type': publication_type,
             'cost': cost,
             'is_special_edition': is_special_edition,
             'on_sale': on_sale
@@ -1224,6 +1224,14 @@ class AdminWindow(QMainWindow):
         issue_combo.setStyleSheet(input_style)
         form_layout.addRow("Выпуск*:", issue_combo)
         
+        # Получаем список курьеров
+        couriers = self.admin_controller.get_couriers()
+        courier_combo = QComboBox()
+        for courier in couriers:
+            courier_combo.addItem(f"{courier.first_name} {courier.last_name}", courier.id)
+        courier_combo.setStyleSheet(input_style)
+        form_layout.addRow("Курьер*:", courier_combo)
+        
         recipient_field = QLineEdit()
         recipient_field.setStyleSheet(input_style)
         form_layout.addRow("Получатель*:", recipient_field)
@@ -1236,6 +1244,11 @@ class AdminWindow(QMainWindow):
         address_field = QLineEdit()
         address_field.setStyleSheet(input_style)
         form_layout.addRow("Адрес доставки*:", address_field)
+        
+        # Опциональное поле для Telegram ID получателя
+        tg_chat_id_field = QLineEdit()
+        tg_chat_id_field.setStyleSheet(input_style)
+        form_layout.addRow("TG Chat ID получателя:", tg_chat_id_field)
         
         delivery_date = QDateTimeEdit()
         delivery_date.setDateTime(QDateTime.currentDateTime())
@@ -1267,16 +1280,15 @@ class AdminWindow(QMainWindow):
         
         layout.addLayout(buttons_layout)
         
-        # Сохраняем ссылку на поле телефона
-        self.recipient_phone_field = recipient_phone_field
-        
         # Соединяем сигналы
         save_button.clicked.connect(lambda: self.save_delivery(
             dialog,
             issue_combo.currentData(),
+            courier_combo.currentData(),
             recipient_field.text(),
             recipient_phone_field.text(),
             address_field.text(),
+            tg_chat_id_field.text() if tg_chat_id_field.text() else None,
             delivery_date.dateTime().toString('yyyy-MM-dd HH:mm:ss'),
             is_delivered.isChecked()
         ))
@@ -1284,14 +1296,16 @@ class AdminWindow(QMainWindow):
         cancel_button.clicked.connect(dialog.reject)
         
         dialog.exec()
+
     
-    def save_delivery(self, dialog, issue_id, recipient, recipient_phone, address, delivery_date, is_delivered):
+    def save_delivery(self, dialog, issue_id, courier_id, recipient_name, recipient_phone, 
+                    recipient_address, recipient_tg_chat_id, delivery_date, is_delivered):
         """Сохраняет данные новой доставки"""
-        if not issue_id or not recipient or not recipient_phone or not address:
+        if not issue_id or not courier_id or not recipient_name or not recipient_phone or not recipient_address:
             QMessageBox.warning(self, "Предупреждение", "Заполните все обязательные поля")
             return
         
-        # Получаем информацию о выпуске для определения стоимости
+        # Получаем информацию о выпуске для определения стоимости и типа
         issue = self.admin_controller.get_issue_by_id(issue_id)
         if not issue:
             QMessageBox.warning(self, "Ошибка", f"Не удалось найти выпуск с ID {issue_id}")
@@ -1300,13 +1314,22 @@ class AdminWindow(QMainWindow):
         # Создаем объект данных для доставки
         delivery_data = {
             'item_id': issue_id,
-            'item_type': issue.publication_type,
-            'recipient_name': recipient,
-            'recipient_address': address,
+            'item_type': issue.issue_type,
+            'courier_id': courier_id,
+            'recipient_name': recipient_name,
+            'recipient_address': recipient_address,
             'recipient_phone': recipient_phone,
             'item_cost': issue.cost,
             'is_delivered': is_delivered
         }
+        
+        # Добавляем опциональные данные
+        if recipient_tg_chat_id:
+            try:
+                delivery_data['recipient_tg_chat_id'] = int(recipient_tg_chat_id)
+            except ValueError:
+                QMessageBox.warning(self, "Ошибка", "ID чата Telegram должен быть числом")
+                return
         
         # Добавляем дату доставки, если доставка уже выполнена
         if is_delivered:
